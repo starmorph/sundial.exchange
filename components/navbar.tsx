@@ -12,8 +12,8 @@ export function Navbar() {
     <nav className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <div className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Jupiter Ultra
+          <div className="text-sm font-mono bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            Sundial.exchange
           </div>
         </div>
 

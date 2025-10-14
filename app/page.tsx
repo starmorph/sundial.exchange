@@ -1,7 +1,14 @@
-import SwapInterface from "@/components/swap-interface"
-import { StatsBar } from "@/components/stats-bar"
-import { TrendingTokens } from "@/components/trending-tokens"
 import { Navbar } from "@/components/navbar"
+import { StatsBar } from "@/components/stats-bar"
+import SwapInterface from "@/components/swap-interface"
+import { TrendingTokens } from "@/components/trending-tokens"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Home",
+  description:
+    "Swap Solana tokens instantly with the best rates on Sundial Exchange. Access trending tokens, real-time stats, and seamless DeFi trading.",
+}
 
 export default function Home() {
   return (

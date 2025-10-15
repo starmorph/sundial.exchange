@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+**/node_modules
 
 # next.js
 /.next/
@@ -18,6 +19,11 @@ yarn-error.log*
 
 # env files
 .env*
+tools/**/.env*
+
+# tool subpackages build artifacts
+tools/**/dist
+tools/**/build
 
 # vercel
 .vercel

@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og"
 
 export const runtime = "edge"
-export const alt = "Sundial Exchange - Solana DEX"
+export const alt = "Sundial Exchange – Solana DEX | Best Rates, Low Fees"
 export const size = {
     width: 1200,
     height: 630,
@@ -35,16 +35,25 @@ export default async function Image() {
                         gap: 20,
                     }}
                 >
-                    <div
-                        style={{
-                            fontSize: 80,
-                            fontWeight: 900,
-                            color: "white",
-                            textAlign: "center",
-                            letterSpacing: "-0.02em",
-                        }}
-                    >
-                        Sundial Exchange
+                    <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+                        <img
+                            src="/favicon.png"
+                            alt="Sundial favicon"
+                            width={96}
+                            height={96}
+                            style={{ borderRadius: 20, boxShadow: "0 8px 24px rgba(0,0,0,0.25)" }}
+                        />
+                        <div
+                            style={{
+                                fontSize: 80,
+                                fontWeight: 900,
+                                color: "white",
+                                textAlign: "left",
+                                letterSpacing: "-0.02em",
+                            }}
+                        >
+                            Sundial Exchange
+                        </div>
                     </div>
                     <div
                         style={{
@@ -54,7 +63,7 @@ export default async function Image() {
                             textAlign: "center",
                         }}
                     >
-                        Solana Decentralized Exchange
+                        Solana DEX • Best Rates • Low Fees
                     </div>
                     <div
                         style={{

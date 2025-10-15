@@ -41,25 +41,25 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://sundial.exchange",
-    title: "Sundial Exchange - Solana DEX",
+    title: "Sundial Exchange – Solana DEX | Best Rates, Low Fees",
     description:
-      "Trade Solana tokens instantly with the best rates. Fast, secure, and user-friendly decentralized exchange built on Solana.",
+      "Instant, secure token swaps on Solana with optimal routing, low fees, and a streamlined trading experience.",
     siteName: "Sundial Exchange",
     images: [
       {
-        url: "/og-image.png",
+        url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Sundial Exchange - Solana Decentralized Exchange",
+        alt: "Sundial Exchange – Solana DEX | Best Rates, Low Fees",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sundial Exchange - Solana DEX",
+    title: "Sundial Exchange – Solana DEX | Best Rates, Low Fees",
     description:
-      "Trade Solana tokens instantly with the best rates. Fast, secure, and user-friendly decentralized exchange.",
-    images: ["/og-image.png"],
+      "Instant, secure token swaps on Solana with optimal routing, low fees, and a streamlined trading experience.",
+    images: ["/opengraph-image"],
     creator: "@sundialexchange",
   },
   robots: {
@@ -75,7 +75,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.png", type: "image/png" },
       { url: "/icon.svg", type: "image/svg+xml" },
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],

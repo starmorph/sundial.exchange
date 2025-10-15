@@ -5,7 +5,7 @@ import { TrendingTokens } from "@/components/trending-tokens"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Home",
+  title: "Sundial Exchange | Solana DEX | Fast, Secure Decentralized Trading ",
   description:
     "Swap Solana tokens instantly with the best rates on Sundial Exchange. Access trending tokens, real-time stats, and seamless DeFi trading.",
 }

@@ -1,7 +1,8 @@
 "use client"
 
-import { Clock } from 'lucide-react'
+import { Clock, Sparkles } from 'lucide-react'
 import dynamic from "next/dynamic"
+import { Button } from './ui/button'
 
 const WalletMultiButton = dynamic(
   () => import("@solana/wallet-adapter-react-ui").then((m) => m.WalletMultiButton),
@@ -11,7 +12,7 @@ const WalletMultiButton = dynamic(
 export function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 border-b border-border/20 bg-black/40 backdrop-blur-xl z-40">
-      <div className="container flex h-12 items-center justify-between px-6">
+      <div className="container mx-auto flex h-12 items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30">
@@ -25,8 +26,17 @@ export function Navbar() {
           <div className="h-4 w-px bg-border/40" />
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-right">
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full border-primary/50 bg-primary/10 text-primary mx-4 "
+          >
+            <Sparkles className="mr-1 h-4 w-4" />
+            Alpha
+          </Button>
           <WalletMultiButton />
+
         </div>
       </div>
     </nav>

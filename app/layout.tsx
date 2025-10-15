@@ -8,6 +8,7 @@ import { Suspense } from "react"
 import "./globals.css"
 import { JsonLd } from "./jsonld"
 
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://sundial.exchange"),
   title: {

@@ -6,7 +6,7 @@ import { executeJupiterOrder, getHoldings, getJupiterOrder } from "@/lib/jupiter
 import { fromTokenAmount, SOLANA_TOKENS, toTokenAmount, type SolanaToken } from "@/lib/solana-tokens"
 import { useConnection, useWallet } from "@solana/wallet-adapter-react"
 import { VersionedTransaction } from "@solana/web3.js"
-import { ArrowDownUp, Loader2, RefreshCw, Sparkles } from "lucide-react"
+import { ArrowDownUp, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export type Token = SolanaToken & {
@@ -287,15 +287,8 @@ export default function SwapInterface() {
 
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-full border-primary/50 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
-          >
-            <Sparkles className="mr-1 h-4 w-4" />
-            Prime
-          </Button>
-          <Button
+
+          {/* <Button
             variant="ghost"
             size="icon"
             className="rounded-full hover:bg-secondary"
@@ -303,7 +296,7 @@ export default function SwapInterface() {
             disabled={!connected}
           >
             <RefreshCw className="h-4 w-4" />
-          </Button>
+          </Button> */}
         </div>
       </div>
 

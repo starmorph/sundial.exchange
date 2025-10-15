@@ -149,18 +149,43 @@
 
 /* Modal styling */
 .wallet-adapter-modal-wrapper {
-  background-color: rgba(0, 0, 0, 0.8) !important;
-  backdrop-filter: blur(4px) !important;
-  z-index: 9999 !important;
-}
-
-.wallet-adapter-modal {
+  /* Center the content card, not an overlay */
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 10050 !important;
+  max-width: 400px !important;
+  width: calc(100% - 2rem) !important;
   background-color: oklch(0.12 0 0) !important;
   border: 1px solid oklch(0.25 0 0 / 0.4) !important;
   border-radius: 0.5rem !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-  max-width: 400px !important;
-  z-index: 10000 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0 !important;
+  flex: none !important;
+}
+
+/* Target all child elements to center them */
+.wallet-adapter-modal-wrapper>*,
+.wallet-adapter-modal-wrapper>*>* {
+  margin: 0 !important;
+}
+
+.wallet-adapter-modal-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  min-height: 100vh !important;
+}
+
+/* Overlay - dim the page */
+.wallet-adapter-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.6) !important;
 }
 
 .wallet-adapter-modal-title {

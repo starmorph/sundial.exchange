@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useWallet, useConnection } from "@solana/wallet-adapter-react"
-import { Button } from "@/components/ui/button"
 import { SwapCard } from "@/components/swap-card"
-import { ArrowDownUp, RefreshCw, Sparkles, Loader2 } from "lucide-react"
-import { getJupiterOrder, executeJupiterOrder, getHoldings } from "@/lib/jupiter-ultra"
-import { SOLANA_TOKENS, toTokenAmount, fromTokenAmount, type SolanaToken } from "@/lib/solana-tokens"
+import { Button } from "@/components/ui/button"
+import { executeJupiterOrder, getHoldings, getJupiterOrder } from "@/lib/jupiter-ultra"
+import { fromTokenAmount, SOLANA_TOKENS, toTokenAmount, type SolanaToken } from "@/lib/solana-tokens"
+import { useConnection, useWallet } from "@solana/wallet-adapter-react"
 import { VersionedTransaction } from "@solana/web3.js"
+import { ArrowDownUp, Loader2, RefreshCw, Sparkles } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export type Token = SolanaToken & {
   balance: number
@@ -284,13 +284,7 @@ export default function SwapInterface() {
           >
             Instant
           </Button>
-          <Button
-            variant={orderType === "limit" ? "default" : "ghost"}
-            onClick={() => setOrderType("limit")}
-            className="rounded-full text-muted-foreground hover:bg-secondary/50"
-          >
-            Limit
-          </Button>
+
         </div>
         <div className="flex items-center gap-2">
           <Button

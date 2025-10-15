@@ -1,209 +1,295 @@
-// DeFi Llama API utilities for fetching historical token prices
+"use server"
 
-export interface PricePoint {
+interface LlamaPricePoint {
   timestamp: number
   price: number
+  confidence: number
 }
 
-export interface TokenPriceData {
+interface LlamaCoinEntry {
   symbol: string
-  prices: PricePoint[]
+  prices: LlamaPricePoint[]
+}
+
+interface LlamaBatchResponse {
+  coins: Record<string, LlamaCoinEntry>
+}
+
+export interface NormalizedTrendingToken {
+  symbol: string
   currentPrice: number
   change24h: number
+  prices: { timestamp: number; price: number }[]
 }
 
-// Solana token addresses for DeFi Llama API
-const TOKEN_IDENTIFIERS: Record<string, string> = {
-  SOL: "coingecko:solana",
-  JUP: "solana:JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
-  ORCA: "solana:orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE",
-  RAY: "solana:4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
-  PUMP: "solana:DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
-}
+const COINGECKO_IDS: string[] = [
+  "coingecko:solana",
+  "coingecko:orca",
+  "coingecko:raydium",
+  "coingecko:jupiter",
+]
 
-/**
- * Fetch historical prices for multiple tokens at a specific timestamp
- */
-async function fetchHistoricalPricesAtTimestamp(coinIds: string[], timestamp: number): Promise<Record<string, number>> {
-  try {
-    const coins = coinIds.join(",")
-    // Use the /prices/historical/{timestamp}/{coins} endpoint
-    const url = `https://coins.llama.fi/prices/historical/${timestamp}/${encodeURIComponent(coins)}?searchWidth=4h`
-
-    const response = await fetch(url)
-
-    if (!response.ok) {
-      console.error(`[v0] Historical prices API error at timestamp ${timestamp}: ${response.status}`)
-      return {}
-    }
-
-    const data = await response.json()
-
-    const prices: Record<string, number> = {}
-
-    if (data.coins) {
-      Object.entries(data.coins).forEach(([coinId, coinData]: [string, any]) => {
-        if (coinData && coinData.price) {
-          prices[coinId] = coinData.price
-        }
-      })
-    }
-
-    return prices
-  } catch (error) {
-    console.error(`[v0] Error fetching historical prices at timestamp ${timestamp}:`, error)
-    return {}
-  }
-}
-
-/**
- * Fetch historical price data for all trending tokens
- * @param hours - Number of hours of historical data to fetch (e.g., 24 for 24h, 168 for 7d)
- */
-export async function fetchTrendingTokensData(hours = 24): Promise<TokenPriceData[]> {
-  console.log(`[v0] Loading trending tokens data from DeFi Llama (${hours}h period)...`)
-
-  const symbols = ["SOL", "JUP", "ORCA", "RAY", "PUMP"]
-  const coinIds = symbols.map((symbol) => TOKEN_IDENTIFIERS[symbol])
-
+function generateHourlyTimestamps(hours: number): number[] {
+  const clamped = Number.isFinite(hours) && hours > 1 ? Math.floor(hours) : 24
+  const stepHours = clamped > 72 ? 6 : 1
   const now = Math.floor(Date.now() / 1000)
   const timestamps: number[] = []
-
-  for (let i = hours; i >= 0; i--) {
-    timestamps.push(now - i * 3600) // Subtract hours to go back in time
+  for (let i = clamped; i >= 0; i -= stepHours) {
+    timestamps.push(now - i * 3600)
   }
+  if (timestamps[timestamps.length - 1] !== now) {
+    timestamps.push(now)
+  }
+  return timestamps
+}
 
-  console.log(`[v0] Fetching ${timestamps.length} hourly price points for ${symbols.length} tokens...`)
-  console.log(
-    `[v0] Time range: ${new Date(timestamps[0] * 1000).toISOString()} to ${new Date(timestamps[timestamps.length - 1] * 1000).toISOString()}`,
+export async function fetchTrendingTokensData(hours: number): Promise<NormalizedTrendingToken[]> {
+  const timestamps = generateHourlyTimestamps(hours)
+  const coinsParam = encodeURIComponent(
+    JSON.stringify(Object.fromEntries(COINGECKO_IDS.map((id) => [id, timestamps])))
   )
-
-  // Fetch prices at all timestamps in parallel
-  const batchResults = await Promise.all(
-    timestamps.map((timestamp) => fetchHistoricalPricesAtTimestamp(coinIds, timestamp)),
-  )
-
-  // Organize data by token
-  const tokenDataMap: Record<string, PricePoint[]> = {}
-
-  symbols.forEach((symbol) => {
-    tokenDataMap[symbol] = []
-  })
-
-  // Process each timestamp's results
-  batchResults.forEach((pricesAtTimestamp, index) => {
-    const timestamp = timestamps[index]
-
-    symbols.forEach((symbol) => {
-      const coinId = TOKEN_IDENTIFIERS[symbol]
-      const price = pricesAtTimestamp[coinId]
-
-      if (price && price > 0) {
-        tokenDataMap[symbol].push({ timestamp, price })
-      }
-    })
-  })
-
-  // Convert to TokenPriceData format
-  const results: TokenPriceData[] = []
-
-  symbols.forEach((symbol) => {
-    const prices = tokenDataMap[symbol]
-
-    if (prices.length === 0) {
-      console.warn(`[v0] No price data found for ${symbol}, using fallback`)
-      const fallbackPrice = getFallbackPrice(symbol)
-      const syntheticPrices = generateSyntheticPriceHistory(fallbackPrice, timestamps)
-      results.push({
-        symbol,
-        prices: syntheticPrices,
-        currentPrice: fallbackPrice,
-        change24h: Math.random() * 10 - 5,
-      })
-      return
-    }
-
-    prices.sort((a, b) => a.timestamp - b.timestamp)
-
-    const currentPrice = prices[prices.length - 1].price
-    const price24hAgo = prices[0].price
-    const changePercent = price24hAgo > 0 ? ((currentPrice - price24hAgo) / price24hAgo) * 100 : 0
-
-    console.log(
-      `[v0] ${symbol}: ${prices.length} price points, current: $${currentPrice.toFixed(2)}, ${hours}h change: ${changePercent.toFixed(2)}%`,
-    )
-
-    results.push({
-      symbol,
-      prices,
-      currentPrice,
-      change24h: changePercent,
-    })
-  })
-
-  console.log(`[v0] Successfully loaded ${results.length} trending tokens`)
-
-  return results
-}
-
-function getFallbackPrice(symbol: string): number {
-  const fallbackPrices: Record<string, number> = {
-    SOL: 145.32,
-    JUP: 0.87,
-    ORCA: 3.21,
-    RAY: 4.56,
-    PUMP: 0.000045,
+  const url = `https://coins.llama.fi/batchHistorical?coins=${coinsParam}&searchWidth=2400`
+  const res = await fetch(url)
+  if (!res.ok) {
+    throw new Error(`DeFi Llama request failed with status ${res.status}`)
   }
-  return fallbackPrices[symbol] || 1.0
-}
-
-function generateSyntheticPriceHistory(basePrice: number, timestamps: number[]): PricePoint[] {
-  const prices: PricePoint[] = []
-  let currentPrice = basePrice * 0.98 // Start slightly lower
-
-  timestamps.forEach((timestamp) => {
-    // Add some realistic price movement
-    const change = (Math.random() - 0.5) * 0.02 // ±1% change per hour
-    currentPrice = currentPrice * (1 + change)
-
-    prices.push({
-      timestamp,
-      price: currentPrice,
-    })
-  })
-
-  return prices
-}
-
-/**
- * Fetch current prices for multiple tokens
- */
-export async function fetchCurrentPrices(symbols: string[]): Promise<Record<string, number>> {
-  try {
-    const coinIds = symbols.map((symbol) => TOKEN_IDENTIFIERS[symbol]).filter(Boolean)
-    const coins = coinIds.join(",")
-
-    const url = `https://coins.llama.fi/prices/current/${encodeURIComponent(coins)}`
-
-    const response = await fetch(url)
-    if (!response.ok) {
-      console.error(`[v0] DeFi Llama current prices API error: ${response.status}`)
-      return {}
+  const data: LlamaBatchResponse = await res.json()
+  const entries = Object.values(data.coins)
+  return entries.map((entry) => {
+    const sorted = [...entry.prices].sort((a, b) => a.timestamp - b.timestamp)
+    const first = sorted[0]?.price ?? 0
+    const last = sorted[sorted.length - 1]?.price ?? 0
+    const changePct = first > 0 ? ((last - first) / first) * 100 : 0
+    return {
+      symbol: entry.symbol,
+      currentPrice: last,
+      change24h: changePct,
+      prices: sorted.map((p) => ({ timestamp: p.timestamp, price: p.price })),
     }
+  })
+}
 
-    const data = await response.json()
 
-    const prices: Record<string, number> = {}
-    symbols.forEach((symbol) => {
-      const coinId = TOKEN_IDENTIFIERS[symbol]
-      if (coinId && data.coins && data.coins[coinId]) {
-        prices[symbol] = data.coins[coinId].price
-      }
-    })
 
-    return prices
-  } catch (error) {
-    console.error("[v0] Error fetching current prices:", error)
-    return {}
+// EXAMPLE RETURNED DATA THIS IS EXACTLY THE FORMAT WE WILL RECEIVE FROM THE ABOVE FETCH REQUEST
+/*
+{
+  "coins": {
+    "coingecko:solana": {
+      "symbol": "SOL",
+        "prices": [
+          {
+            "timestamp": 1760468765,
+            "price": 201.93961456349797,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760472358,
+            "price": 199.40030997214248,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760475954,
+            "price": 200.47044167229342,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760479554,
+            "price": 201.74294878093653,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760483163,
+            "price": 201.99216609385152,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760486764,
+            "price": 202.8823002736927,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760490363,
+            "price": 203.06165251681944,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760493955,
+            "price": 203.62493658403926,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760501159,
+            "price": 201.34925106068044,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760497555,
+            "price": 203.28813213952205,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760504742,
+            "price": 203.69155897663268,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760508363,
+            "price": 204.9244376541187,
+            "confidence": 0.99
+          }
+        ]
+    },
+    "coingecko:orca": {
+      "symbol": "ORCA",
+        "prices": [
+          {
+            "timestamp": 1760471993,
+            "price": 1.7109376645943182,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760468403,
+            "price": 1.7180109048571963,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760479207,
+            "price": 1.7137933080555094,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760475594,
+            "price": 1.7187321896962462,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760482801,
+            "price": 1.7099827488186763,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760486399,
+            "price": 1.7137125377205469,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760489991,
+            "price": 1.7161822153351953,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760493605,
+            "price": 1.7131519986180925,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760500806,
+            "price": 1.69906117027593,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760504396,
+            "price": 1.7101698289729392,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760508011,
+            "price": 1.705545476024393,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760497196,
+            "price": 1.7101721251614475,
+            "confidence": 0.99
+          }
+        ]
+    },
+    "coingecko:raydium": {
+      "symbol": "RAY",
+        "prices": [
+          {
+            "timestamp": 1760468405,
+            "price": 2.0335447515073266,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760471995,
+            "price": 1.9980095794622812,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760475595,
+            "price": 2.003473555172286,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760479195,
+            "price": 2.0114192071974735,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760482791,
+            "price": 2.003254261443196,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760486400,
+            "price": 2.0114333360974057,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760489992,
+            "price": 2.003098449109412,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760493608,
+            "price": 1.9830238875094566,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760497197,
+            "price": 1.99149297677534,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760500807,
+            "price": 1.9664568362582042,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760504397,
+            "price": 1.9779648324106218,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760508011,
+            "price": 1.9776467166541252,
+            "confidence": 0.99
+          }
+        ]
+    },
+    "coingecko:jupiter": {
+      "symbol": "JUP",
+        "prices": [
+          {
+            "timestamp": 1760475530,
+            "price": 0.0008925888835344107,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760489879,
+            "price": 0.000951894600267491,
+            "confidence": 0.99
+          },
+          {
+            "timestamp": 1760504332,
+            "price": 0.0008461808892392098,
+            "confidence": 0.99
+          }
+        ]
+    }
   }
 }
+  */

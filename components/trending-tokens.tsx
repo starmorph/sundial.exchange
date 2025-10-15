@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { TrendingUp, TrendingDown } from "lucide-react"
-import { LineChart, Line, ResponsiveContainer, YAxis, Tooltip } from "recharts"
-import { fetchTrendingTokensData } from "@/lib/defillama"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { NormalizedTrendingToken } from "@/lib/defillama"
+import { motion } from "framer-motion"
+import { TrendingDown, TrendingUp } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Line, LineChart, ResponsiveContainer, Tooltip, YAxis } from "recharts"
 
 interface TrendingToken {
   symbol: string
@@ -16,7 +16,6 @@ interface TrendingToken {
   icon: string
 }
 
-// Token metadata
 const TOKEN_METADATA: Record<string, { name: string; icon: string }> = {
   SOL: { name: "Solana", icon: "◎" },
   JUP: { name: "Jupiter", icon: "🪐" },
@@ -36,22 +35,21 @@ export function TrendingTokens() {
   useEffect(() => {
     async function loadPriceData() {
       try {
-        console.log("[v0] Loading trending tokens data from DeFi Llama...")
+        const [res24, res7] = await Promise.all([
+          fetch("/api/trending?hours=24"),
+          fetch("/api/trending?hours=168"),
+        ])
+        if (!res24.ok || !res7.ok) throw new Error("Failed to fetch trending tokens API")
 
-        const [priceData24h, priceData7d] = await Promise.all([
-          fetchTrendingTokensData(24),
-          fetchTrendingTokensData(168), // 7 days = 168 hours
+        const [priceData24h, priceData7d]: [NormalizedTrendingToken[], NormalizedTrendingToken[]] = await Promise.all([
+          res24.json(),
+          res7.json(),
         ])
 
-        const processData = (priceData: any[]) => {
-          return priceData.map((data) => {
+        const processData = (priceData: NormalizedTrendingToken[]): TrendingToken[] =>
+          priceData.map((data) => {
             const metadata = TOKEN_METADATA[data.symbol] || { name: data.symbol, icon: "💎" }
-
-            const sparklineData = data.prices.map((p: any) => ({
-              value: p.price,
-              timestamp: p.timestamp,
-            }))
-
+            const sparklineData = data.prices.map((p) => ({ value: p.price, timestamp: p.timestamp }))
             return {
               symbol: data.symbol,
               name: metadata.name,
@@ -61,36 +59,29 @@ export function TrendingTokens() {
               icon: metadata.icon,
             }
           })
-        }
 
         const tokens24h = processData(priceData24h)
         const tokens7d = processData(priceData7d)
-
         setData24h(tokens24h)
         setData7d(tokens7d)
         setTokens(timePeriod === "24h" ? tokens24h : tokens7d)
-        setLoading(false)
-        console.log(`[v0] Successfully loaded trending tokens for both time periods`)
-      } catch (error) {
-        console.error("[v0] Error loading trending tokens:", error)
-        setTokens(generateMockTokens())
+      } catch (e) {
+        setTokens([])
+      } finally {
         setLoading(false)
       }
     }
 
     loadPriceData()
-
     const interval = setInterval(loadPriceData, 60000)
     return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
-    if (timePeriod === "24h" && data24h.length > 0) {
-      setTokens(data24h)
-    } else if (timePeriod === "7d" && data7d.length > 0) {
-      setTokens(data7d)
-    }
+    if (timePeriod === "24h" && data24h.length > 0) setTokens(data24h)
+    if (timePeriod === "7d" && data7d.length > 0) setTokens(data7d)
   }, [timePeriod, data24h, data7d])
+
 
   if (loading) {
     return (
@@ -198,9 +189,8 @@ export function TrendingTokens() {
                     ${displayPrice < 0.01 ? displayPrice.toFixed(6) : displayPrice.toFixed(2)}
                   </motion.span>
                   <div
-                    className={`flex items-center gap-1 text-xs font-mono ${
-                      token.change24h >= 0 ? "text-green-500" : "text-red-500"
-                    }`}
+                    className={`flex items-center gap-1 text-xs font-mono ${token.change24h >= 0 ? "text-green-500" : "text-red-500"
+                      }`}
                   >
                     {token.change24h >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                     <span>{Math.abs(token.change24h).toFixed(1)}%</span>
@@ -215,50 +205,6 @@ export function TrendingTokens() {
   )
 }
 
-function generateMockTokens(): TrendingToken[] {
-  return [
-    {
-      symbol: "SOL",
-      name: "Solana",
-      price: 142.85,
-      change24h: 5.2,
-      sparklineData: generateSparklineData(142.85, 5.2),
-      icon: "◎",
-    },
-    {
-      symbol: "JUP",
-      name: "Jupiter",
-      price: 0.87,
-      change24h: -3.1,
-      sparklineData: generateSparklineData(0.87, -3.1),
-      icon: "🪐",
-    },
-    {
-      symbol: "ORCA",
-      name: "Orca",
-      price: 3.45,
-      change24h: 8.7,
-      sparklineData: generateSparklineData(3.45, 8.7),
-      icon: "🐋",
-    },
-    {
-      symbol: "RAY",
-      name: "Raydium",
-      price: 2.15,
-      change24h: 4.3,
-      sparklineData: generateSparklineData(2.15, 4.3),
-      icon: "⚡",
-    },
-    {
-      symbol: "PUMP",
-      name: "Pump",
-      price: 0.000045,
-      change24h: 15.2,
-      sparklineData: generateSparklineData(0.000045, 15.2),
-      icon: "🚀",
-    },
-  ]
-}
 
 function generateSparklineData(basePrice: number, change24h: number): { value: number; timestamp: number }[] {
   const points = 24

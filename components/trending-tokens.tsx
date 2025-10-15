@@ -1,6 +1,8 @@
 "use client"
 
+import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useIsMobile } from "@/hooks/use-mobile"
 import type { NormalizedTrendingToken } from "@/lib/defillama"
 import { motion } from "framer-motion"
 import { TrendingDown, TrendingUp } from "lucide-react"
@@ -31,6 +33,9 @@ export function TrendingTokens() {
   const [timePeriod, setTimePeriod] = useState<"24h" | "7d">("24h")
   const [data24h, setData24h] = useState<TrendingToken[]>([])
   const [data7d, setData7d] = useState<TrendingToken[]>([])
+  const isMobile = useIsMobile()
+  const [expanded, setExpanded] = useState(false)
+  const [cols, setCols] = useState(1)
 
   useEffect(() => {
     async function loadPriceData() {
@@ -82,6 +87,20 @@ export function TrendingTokens() {
     if (timePeriod === "7d" && data7d.length > 0) setTokens(data7d)
   }, [timePeriod, data24h, data7d])
 
+  useEffect(() => {
+    const computeCols = () => {
+      const w = window.innerWidth
+      if (w >= 1024) return 5
+      if (w >= 768) return 4
+      if (w >= 640) return 2
+      return 1
+    }
+    const onResize = () => setCols(computeCols())
+    setCols(computeCols())
+    window.addEventListener("resize", onResize)
+    return () => window.removeEventListener("resize", onResize)
+  }, [])
+
 
   if (loading) {
     return (
@@ -120,8 +139,8 @@ export function TrendingTokens() {
             </TabsList>
           </Tabs>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {tokens.map((token) => {
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {tokens.slice(0, isMobile ? (expanded ? tokens.length : 3) : Math.min(cols, tokens.length)).map((token) => {
             const prices = token.sparklineData.map((d) => d.value)
             const minPrice = Math.min(...prices)
             const maxPrice = Math.max(...prices)
@@ -200,6 +219,13 @@ export function TrendingTokens() {
             )
           })}
         </div>
+        {isMobile && tokens.length > 1 && (
+          <div className="mt-3 flex justify-center">
+            <Button variant="ghost" size="sm" onClick={() => setExpanded((v) => !v)} aria-expanded={expanded}>
+              {expanded ? "Show less" : "Show more"}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )

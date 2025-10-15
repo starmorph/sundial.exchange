@@ -27,6 +27,7 @@ const COINGECKO_IDS: string[] = [
   "coingecko:orca",
   "coingecko:raydium",
   "coingecko:jupiter",
+  "coingecko:pump",
 ]
 
 function generateHourlyTimestamps(hours: number): number[] {

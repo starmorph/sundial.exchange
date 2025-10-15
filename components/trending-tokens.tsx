@@ -126,7 +126,7 @@ export function TrendingTokens() {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-semibold text-foreground">Trending on Solana</h3>
+            <h3 className="text-sm font-semibold text-foreground">Solana DEX Bluechips</h3>
           </div>
           <Tabs value={timePeriod} onValueChange={(value) => setTimePeriod(value as "24h" | "7d")}>
             <TabsList className="h-7 bg-secondary/50 border border-border/50">
@@ -140,7 +140,7 @@ export function TrendingTokens() {
           </Tabs>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {tokens.slice(0, isMobile ? (expanded ? tokens.length : 3) : Math.min(cols, tokens.length)).map((token) => {
+          {tokens.slice(0, isMobile ? (expanded ? tokens.length : 2) : Math.min(cols, tokens.length)).map((token) => {
             const prices = token.sparklineData.map((d) => d.value)
             const minPrice = Math.min(...prices)
             const maxPrice = Math.max(...prices)
@@ -232,21 +232,3 @@ export function TrendingTokens() {
 }
 
 
-function generateSparklineData(basePrice: number, change24h: number): { value: number; timestamp: number }[] {
-  const points = 24
-  const data: { value: number; timestamp: number }[] = []
-  const startPrice = basePrice * (1 - change24h / 100)
-  const now = Math.floor(Date.now() / 1000)
-
-  for (let i = 0; i < points; i++) {
-    const progress = i / (points - 1)
-    const trend = startPrice + (basePrice - startPrice) * progress
-    const noise = (Math.random() - 0.5) * basePrice * 0.02
-    data.push({
-      value: trend + noise,
-      timestamp: now - (points - i) * 3600,
-    })
-  }
-
-  return data
-}

@@ -6,6 +6,8 @@ export interface JupiterOrderParams {
   amount: string
   taker: string
   slippageBps?: number
+  referralAccount?: string
+  referralFeeBps?: number
 }
 
 export interface JupiterOrderResponse {
@@ -65,13 +67,33 @@ export async function getHoldings(address: string): Promise<HoldingsResponse> {
 }
 
 export async function getJupiterOrder(params: JupiterOrderParams): Promise<JupiterOrderResponse> {
-  const queryParams = new URLSearchParams({
+  const referralAccount =
+    params.referralAccount || (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_ULTRA_REFERRAL_ACCOUNT : undefined)
+  const referralFeeBps =
+    params.referralFeeBps || (typeof process !== "undefined" && process.env.NEXT_PUBLIC_ULTRA_REFERRAL_FEE_BPS
+      ? Number(process.env.NEXT_PUBLIC_ULTRA_REFERRAL_FEE_BPS)
+      : undefined)
+
+  const baseParams: Record<string, string> = {
     inputMint: params.inputMint,
     outputMint: params.outputMint,
     amount: params.amount,
     taker: params.taker,
-    ...(params.slippageBps && { slippageBps: params.slippageBps.toString() }),
-  })
+  }
+
+  if (params.slippageBps !== undefined) {
+    baseParams.slippageBps = params.slippageBps.toString()
+  }
+
+  if (referralAccount) {
+    baseParams.referralAccount = referralAccount
+  }
+
+  if (referralFeeBps !== undefined) {
+    baseParams.referralFee = referralFeeBps.toString()
+  }
+
+  const queryParams = new URLSearchParams(baseParams)
 
   const response = await fetch(`${JUPITER_ULTRA_API}/order?${queryParams}`)
 

@@ -118,6 +118,8 @@ Create a `.env.local` file:
 
 ```env
 NEXT_PUBLIC_SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+NEXT_PUBLIC_ULTRA_REFERRAL_ACCOUNT=
+NEXT_PUBLIC_ULTRA_REFERRAL_FEE_BPS=50
 ```
 
 ## Deployment

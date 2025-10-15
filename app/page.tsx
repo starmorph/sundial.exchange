@@ -12,12 +12,12 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden w-full max-w-[100vw]">
       <Navbar />
       <div className="pt-12">
         <StatsBar />
         <TrendingTokens />
-        <main className="flex items-center justify-center p-4 pt-8">
+        <main className="flex items-center justify-center p-4 pt-8 w-full max-w-full">
           <SwapInterface />
         </main>
       </div>

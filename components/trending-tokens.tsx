@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useIsMobile } from "@/hooks/use-mobile"
 import type { NormalizedTrendingToken } from "@/lib/defillama"
@@ -106,13 +107,31 @@ export function TrendingTokens() {
     return (
       <div className="w-full border-b border-border/50 bg-card/30 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-semibold text-foreground">Trending on Solana</h3>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Solana DEX Bluechips</h3>
+            </div>
+            <Skeleton className="h-7 w-24" />
           </div>
-          <div className="grid grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-32 rounded-lg bg-secondary/50 border border-border/50 animate-pulse" />
+              <div key={i} className="flex flex-col gap-2 p-3 rounded-lg bg-secondary/50 border border-border/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-6 w-6 rounded-full" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-12" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                </div>
+                <Skeleton className="h-12 w-full" />
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-12" />
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -167,7 +186,7 @@ export function TrendingTokens() {
                   </div>
                 </div>
 
-                <div className="h-12 -mx-1">
+                <div className="h-12 overflow-hidden">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={token.sparklineData}

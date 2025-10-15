@@ -111,7 +111,7 @@ export default function RootLayout({
           site-id="bc882c66-6556-460c-b971-2326f5564178"
         />
       </head>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} overflow-x-hidden w-full max-w-[100vw]`}>
         <Suspense fallback={<div>Loading...</div>}>
           <SolanaWalletProvider>{children}</SolanaWalletProvider>
         </Suspense>

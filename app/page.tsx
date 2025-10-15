@@ -14,11 +14,13 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <StatsBar />
-      <TrendingTokens />
-      <main className="flex items-center justify-center p-4 pt-8">
-        <SwapInterface />
-      </main>
+      <div className="pt-12">
+        <StatsBar />
+        <TrendingTokens />
+        <main className="flex items-center justify-center p-4 pt-8">
+          <SwapInterface />
+        </main>
+      </div>
     </div>
   )
 }

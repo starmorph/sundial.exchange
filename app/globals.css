@@ -84,7 +84,163 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Solana Wallet Adapter Custom Styles */
+.wallet-adapter-button {
+  background-color: oklch(0.75 0.15 85 / 0.1) !important;
+  color: oklch(0.75 0.15 85) !important;
+  border: 1px solid oklch(0.75 0.15 85 / 0.3) !important;
+  border-radius: 0.375rem !important;
+  height: 2rem !important;
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  font-size: 0.75rem !important;
+  font-family: var(--font-geist-mono), monospace !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.025em !important;
+  transition: all 0.2s !important;
+  box-shadow: none !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.wallet-adapter-button:not([disabled]):hover {
+  background-color: oklch(0.75 0.15 85 / 0.2) !important;
+  box-shadow: 0 0 12px rgba(191, 148, 71, 0.15) !important;
+}
+
+.wallet-adapter-button-trigger {
+  background-color: oklch(0.75 0.15 85 / 0.1) !important;
+  color: oklch(0.75 0.15 85) !important;
+  border: 1px solid oklch(0.75 0.15 85 / 0.3) !important;
+  border-radius: 0.375rem !important;
+  height: 2rem !important;
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  font-size: 0.75rem !important;
+  font-family: var(--font-geist-mono), monospace !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.025em !important;
+}
+
+/* Connected wallet button */
+.wallet-adapter-button-start-icon,
+.wallet-adapter-button-end-icon {
+  width: 1rem !important;
+  height: 1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+}
+
+.wallet-adapter-button-start-icon img,
+.wallet-adapter-button-end-icon img {
+  width: 1rem !important;
+  height: 1rem !important;
+  border-radius: 0.125rem !important;
+}
+
+/* Modal styling */
+.wallet-adapter-modal-wrapper {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(4px) !important;
+  z-index: 9999 !important;
+}
+
+.wallet-adapter-modal {
+  background-color: oklch(0.12 0 0) !important;
+  border: 1px solid oklch(0.25 0 0 / 0.4) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  max-width: 400px !important;
+  z-index: 10000 !important;
+}
+
+.wallet-adapter-modal-title {
+  color: oklch(0.95 0 0) !important;
+  font-family: var(--font-geist-mono), monospace !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  letter-spacing: -0.025em !important;
+}
+
+.wallet-adapter-modal-list {
+  gap: 0.5rem !important;
+}
+
+.wallet-adapter-modal-list-item {
+  background-color: oklch(0.75 0.15 85 / 0.05) !important;
+  border: 1px solid oklch(0.75 0.15 85 / 0.2) !important;
+  border-radius: 0.375rem !important;
+  transition: all 0.2s !important;
+}
+
+.wallet-adapter-modal-list-item:not([disabled]):hover {
+  background-color: oklch(0.75 0.15 85 / 0.1) !important;
+  border-color: oklch(0.75 0.15 85 / 0.3) !important;
+  box-shadow: 0 0 12px rgba(191, 148, 71, 0.1) !important;
+}
+
+.wallet-adapter-button-end-icon svg,
+.wallet-adapter-modal-button-close svg {
+  width: 1rem !important;
+  height: 1rem !important;
+  color: oklch(0.55 0 0) !important;
+}
+
+.wallet-adapter-button-end-icon svg:hover,
+.wallet-adapter-modal-button-close svg:hover {
+  color: oklch(0.95 0 0) !important;
+}
+
+/* Dropdown menu */
+.wallet-adapter-dropdown {
+  position: relative !important;
+  z-index: 100 !important;
+}
+
+.wallet-adapter-dropdown-list {
+  background-color: oklch(0.12 0 0) !important;
+  border: 1px solid oklch(0.25 0 0 / 0.4) !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 0 0 1px oklch(0.75 0.15 85 / 0.1) !important;
+  padding: 0.25rem !important;
+  top: calc(100% + 0.5rem) !important;
+  right: 0 !important;
+  z-index: 100 !important;
+  position: absolute !important;
+  backdrop-filter: none !important;
+}
+
+.wallet-adapter-dropdown-list-item {
+  background-color: transparent !important;
+  color: oklch(0.95 0 0) !important;
+  border-radius: 0.125rem !important;
+  font-size: 0.75rem !important;
+  font-family: var(--font-geist-mono), monospace !important;
+  padding: 0.5rem 0.75rem !important;
+  transition: all 0.2s !important;
+}
+
+.wallet-adapter-dropdown-list-item:hover {
+  background-color: oklch(0.75 0.15 85 / 0.1) !important;
+  color: oklch(0.75 0.15 85) !important;
+}
+
+/* Collapse/expand button */
+.wallet-adapter-collapse {
+  width: auto !important;
+}
+
+/* Remove default focus rings and add custom ones */
+.wallet-adapter-button:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px oklch(0.08 0 0), 0 0 0 4px oklch(0.75 0.15 85 / 0.5) !important;
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { Clock } from 'lucide-react'
 import dynamic from "next/dynamic"
 
 const WalletMultiButton = dynamic(
@@ -9,15 +10,24 @@ const WalletMultiButton = dynamic(
 
 export function Navbar() {
   return (
-    <nav className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <div className="text-sm font-mono bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Sundial.exchange
+    <nav className="fixed top-0 left-0 right-0 border-b border-border/20 bg-black/40 backdrop-blur-xl z-40">
+      <div className="container flex h-12 items-center justify-between px-6">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30">
+              <Clock className="h-4 w-4 text-primary" strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col leading-none">
+              <span className="text-sm font-bold tracking-tight text-foreground font-mono">SUNDIAL</span>
+              <span className="text-[12px] text-muted-foreground/100 font-mono tracking-wider">EXCHANGE</span>
+            </div>
           </div>
+          <div className="h-4 w-px bg-border/40" />
         </div>
 
-        <WalletMultiButton className="!bg-primary !text-primary-foreground hover:!bg-primary/90 !rounded-lg !h-9 !px-4 !text-sm !font-medium transition-colors" />
+        <div className="flex items-center">
+          <WalletMultiButton />
+        </div>
       </div>
     </nav>
   )

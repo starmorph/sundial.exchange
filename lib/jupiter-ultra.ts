@@ -1,4 +1,5 @@
 const JUPITER_ULTRA_API = "https://lite-api.jup.ag/ultra/v1"
+import { track } from "@vercel/analytics"
 
 export interface JupiterOrderParams {
   inputMint: string
@@ -23,6 +24,8 @@ export interface JupiterOrderResponse {
   priceImpactPct: string
   transaction: string
   routePlan: any[]
+  feeBps?: number
+  feeMint?: string
 }
 
 export interface JupiterExecuteResponse {
@@ -95,20 +98,55 @@ export async function getJupiterOrder(params: JupiterOrderParams): Promise<Jupit
 
   const queryParams = new URLSearchParams(baseParams)
 
+  try {
+    track("ultra_order_request", {
+      inputMint: params.inputMint,
+      outputMint: params.outputMint,
+      amount: params.amount,
+      taker: params.taker,
+      slippageBps: params.slippageBps ?? null,
+      hasReferralAccount: Boolean(referralAccount),
+      referralFeeBps: referralFeeBps ?? null,
+    })
+  } catch { }
+
   const response = await fetch(`${JUPITER_ULTRA_API}/order?${queryParams}`)
 
   if (!response.ok) {
     const errorText = await response.text()
+    try {
+      track("ultra_order_error", {
+        status: response.status,
+        statusText: response.statusText,
+        inputMint: params.inputMint,
+        outputMint: params.outputMint,
+        amount: params.amount,
+      })
+    } catch { }
     throw new Error(`Failed to get Jupiter order: ${response.statusText} - ${errorText}`)
   }
 
-  return response.json()
+  const json = (await response.json()) as JupiterOrderResponse
+  try {
+    track("ultra_order_success", {
+      requestId: json.requestId,
+      inAmount: json.inAmount,
+      outAmount: json.outAmount,
+      feeBps: (json as any).feeBps ?? json.feeBps ?? null,
+      feeMint: (json as any).feeMint ?? json.feeMint ?? null,
+    })
+  } catch { }
+  return json
 }
 
 export async function executeJupiterOrder(
   signedTransaction: string,
   requestId: string,
 ): Promise<JupiterExecuteResponse> {
+  try {
+    track("ultra_execute_attempt", { requestId })
+  } catch { }
+
   const response = await fetch(`${JUPITER_ULTRA_API}/execute`, {
     method: "POST",
     headers: {
@@ -122,8 +160,15 @@ export async function executeJupiterOrder(
 
   if (!response.ok) {
     const errorText = await response.text()
+    try {
+      track("ultra_execute_error", { requestId, status: response.status, statusText: response.statusText })
+    } catch { }
     throw new Error(`Failed to execute Jupiter order: ${response.statusText} - ${errorText}`)
   }
 
-  return response.json()
+  const json = (await response.json()) as JupiterExecuteResponse
+  try {
+    track("ultra_execute_result", { requestId, status: json.status, signature: json.signature ?? null })
+  } catch { }
+  return json
 }

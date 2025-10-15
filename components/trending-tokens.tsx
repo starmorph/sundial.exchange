@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { TrendingUp, TrendingDown } from "lucide-react"
-import { LineChart, Line, ResponsiveContainer } from "recharts"
+import { TrendingDown, TrendingUp } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Line, LineChart, ResponsiveContainer } from "recharts"
 
 interface TrendingToken {
   symbol: string
@@ -84,7 +84,7 @@ export function TrendingTokens() {
   }, [])
 
   return (
-    <div className="w-full border-b border-border/50 bg-card/30 backdrop-blur-sm">
+    <div className=" hidden sm:block sm:w-full border-b border-border/50 bg-card/30 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center gap-2 mb-2">
           <TrendingUp className="h-4 w-4 text-primary" />
@@ -134,9 +134,8 @@ export function TrendingTokens() {
                   ${token.price < 0.01 ? token.price.toFixed(6) : token.price.toFixed(2)}
                 </motion.span>
                 <div
-                  className={`flex items-center gap-1 text-xs font-mono ${
-                    token.change24h >= 0 ? "text-green-500" : "text-red-500"
-                  }`}
+                  className={`flex items-center gap-1 text-xs font-mono ${token.change24h >= 0 ? "text-green-500" : "text-red-500"
+                    }`}
                 >
                   {token.change24h >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                   <span>{Math.abs(token.change24h).toFixed(1)}%</span>

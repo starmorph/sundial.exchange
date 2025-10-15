@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { GeistMono } from "geist/font/mono"
 import { GeistSans } from "geist/font/sans"
 import type { Metadata } from "next"
+import Script from "next/script"
 import type React from "react"
 import { Suspense } from "react"
 import "./globals.css"
@@ -100,6 +101,15 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <JsonLd />
+
+        <Script
+          src="https://cdn.markfi.xyz/scripts/analytics/0.11.24/cookie3.analytics.min.js"
+          integrity="sha384-ihnQ09PGDbDPthGB3QoQ2Heg2RwQIDyWkHkqxMzq91RPeP8OmydAZbQLgAakAOfI"
+          crossOrigin="anonymous"
+          async
+          strategy="lazyOnload"
+          site-id="bc882c66-6556-460c-b971-2326f5564178"
+        />
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <Suspense fallback={<div>Loading...</div>}>

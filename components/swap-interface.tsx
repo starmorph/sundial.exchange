@@ -2,6 +2,7 @@
 
 import { SwapCard } from "@/components/swap-card"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { executeJupiterOrder, getHoldings, getJupiterOrder } from "@/lib/jupiter-ultra"
 import { fromTokenAmount, SOLANA_TOKENS, toTokenAmount, type SolanaToken } from "@/lib/solana-tokens"
 import { useConnection, useWallet } from "@solana/wallet-adapter-react"
@@ -269,7 +270,52 @@ export default function SwapInterface() {
   const swapButtonState = getSwapButtonState()
 
   if (!sellToken || !buyToken) {
-    return <div>Loading...</div>
+    return (
+      <div className="w-full max-w-md space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-20 rounded-full" />
+            <Skeleton className="h-8 w-20 rounded-full" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+          </div>
+        </div>
+
+        <div className="relative">
+          <div className="p-4 rounded-2xl border border-border/50 bg-secondary/50">
+            <div className="flex items-center justify-between mb-3">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-5 w-16" />
+            </div>
+            <Skeleton className="h-10 w-full" />
+            <div className="mt-3 flex items-center justify-between">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
+
+          <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
+            <Skeleton className="h-10 w-10 rounded-full" />
+          </div>
+
+          <div className="mt-4 p-4 rounded-2xl border border-border/50 bg-secondary/50">
+            <div className="flex items-center justify-between mb-3">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-5 w-16" />
+            </div>
+            <Skeleton className="h-10 w-full" />
+            <div className="mt-3 flex items-center justify-between">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
+        </div>
+
+        <Skeleton className="h-14 w-full rounded-2xl" />
+        <Skeleton className="h-4 w-40" />
+      </div>
+    )
   }
 
   return (

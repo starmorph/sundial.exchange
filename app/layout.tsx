@@ -111,6 +111,12 @@ export default function RootLayout({
           strategy="lazyOnload"
           site-id="bc882c66-6556-460c-b971-2326f5564178"
         />
+
+        <Script
+          src="/twitter-pixel.js"
+          strategy="lazyOnload"
+        />
+
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} overflow-x-hidden w-full max-w-[100vw]`}>
         <Suspense fallback={<div>Loading...</div>}>

@@ -2,13 +2,16 @@ export const SOLANA_TOKEN_MINTS: Record<string, string> = {
   SOL: "So11111111111111111111111111111111111111112", // Native SOL
   USDC: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC
   USDT: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", // USDT
-  TRUMP: "9d9mb8kooffad3sctgztkxqypkshx6ezhbkio89ixyy2", // Official Trump
-  PUMP: "2uf4xh61rdwxng9woyxsvqp7zua6klfpb3nvnrqeoisd", // Pump.fun
-  FARTCOIN: "bzc9nzfmqkxr6fz1dbph7bdf9broyef6pnzesp7v5iiw", // Fartcoin
-  USELESS: "q2sphpduwfmg7m7wwrqklrn619caucfrsmhvjffodsp", // Useless Coin
+  TRUMP: "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN", // Official Trump
+  PUMP: "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn", // Pump.fun
   WIF: "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", // dogwifhat
-  BONK: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", // Bonk
-  TROLL: "4w2cysotx6czaugmmwg13hdpy4qemg2czekyeqyk9ama", // TROLL
+  PYUSD: "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo", // Paypal USD,
+  JUP: "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN", // Jupiter Token
+  JLP: "27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4", // Jupiter LP Token
+  cbBTC: "cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij",
+  EURC: "HzwqbKZw8HxMN6bF2yFZNrht3c2iXXzpKcFu7uBEDKtr", // Euro Coin
+  KMNO: "KMNo3nJsBXfcpJTVhZcXLW7RmTwTt4GVFE7suUBo9sS"
+
   // Add more as needed (e.g., from Helius API)
 };
 

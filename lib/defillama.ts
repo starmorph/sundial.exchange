@@ -50,7 +50,7 @@ export async function fetchTrendingTokensData(hours: number): Promise<Normalized
     JSON.stringify(Object.fromEntries(COINGECKO_IDS.map((id) => [id, timestamps])))
   )
   const url = `https://coins.llama.fi/batchHistorical?coins=${coinsParam}&searchWidth=2400`
-  const res = await fetch(url)
+  const res = await fetch(url, { next: { revalidate: 60 } })
   if (!res.ok) {
     throw new Error(`DeFi Llama request failed with status ${res.status}`)
   }

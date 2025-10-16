@@ -67,7 +67,7 @@ export async function getTopTokensByVolume(
 ): Promise<TopToken[]> {
     const coinsRes = await fetch(
         `https://price.jup.ag/v6/coins?limit=${limit}&sortBy=volume24hUSD&direction=desc&offset=0`,
-        {},
+        { next: { revalidate: 300 } },
     )
 
     if (!coinsRes.ok) {

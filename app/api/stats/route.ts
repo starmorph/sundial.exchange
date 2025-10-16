@@ -171,8 +171,8 @@ export async function GET() {
 
     return NextResponse.json(body, {
         headers: {
-            // Allow fast polling; subrequests handle their own caching
-            "Cache-Control": "no-store",
+            // Short CDN cache to coalesce frequent client polls while keeping UI near real-time
+            "Cache-Control": "public, s-maxage=3, stale-while-revalidate=15",
         },
     })
 }

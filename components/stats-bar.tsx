@@ -49,7 +49,7 @@ export function StatsBar() {
 
     const tick = async () => {
       try {
-        const res = await fetch("/api/stats", { cache: "no-store" })
+        const res = await fetch("/api/stats")
         if (!res.ok) return
         const data: {
           tps: number | null

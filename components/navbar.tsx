@@ -40,7 +40,7 @@ export function Navbar() {
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full border-primary/50 bg-primary/10 text-primary mx-4 "
+            className="rounded-full hidden sm:flex border-primary/50 bg-primary/10 text-primary mx-4 "
           >
             <Sparkles className="mr-1 h-4 w-4" />
             Alpha

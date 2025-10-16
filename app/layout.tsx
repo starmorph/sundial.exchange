@@ -102,7 +102,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <JsonLd />
-
+        <script src="https://analytics.ahrefs.com/analytics.js" data-key="AdJU6cSsA/GmlToZ391uCg" async></script>
         <Script
           src="https://cdn.markfi.xyz/scripts/analytics/0.11.24/cookie3.analytics.min.js"
           integrity="sha384-ihnQ09PGDbDPthGB3QoQ2Heg2RwQIDyWkHkqxMzq91RPeP8OmydAZbQLgAakAOfI"

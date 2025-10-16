@@ -51,7 +51,15 @@ export function StatsBar() {
       try {
         const res = await fetch("/api/stats", { cache: "no-store" })
         if (!res.ok) return
-        const data: { tps: number | null; solPriceUsd: number | null; tvlUsd: number | null; volume24hUsd: number | null } =
+        const data: {
+          tps: number | null
+          solPriceUsd: number | null
+          tvlUsd: number | null
+          volume24hUsd: number | null
+          solChange24hPct?: number | null
+          tvlChange24hPct?: number | null
+          volume24hChangePct?: number | null
+        } =
           await res.json()
         if (!isMounted) return
 
@@ -72,19 +80,22 @@ export function StatsBar() {
             label: "SOL",
             prefix: "$",
             value: solVal !== null ? fmtUsd(solVal) : stats[1]?.value,
-            change: computeChangePct(prev.sol, solVal ?? null),
+            change: typeof data.solChange24hPct === "number" ? Number.parseFloat(data.solChange24hPct.toFixed(1)) : 0,
           },
           {
             label: "TVL",
             prefix: "$",
             value: tvlVal !== null ? fmtUsdBillions(tvlVal) : stats[2]?.value,
-            change: computeChangePct(prev.tvl, tvlVal ?? null),
+            change: typeof data.tvlChange24hPct === "number" ? Number.parseFloat(data.tvlChange24hPct.toFixed(1)) : 0,
           },
           {
             label: "24H VOL",
             prefix: "$",
             value: volVal !== null ? fmtUsdCompact(volVal) : stats[3]?.value,
-            change: computeChangePct(prev.vol, volVal ?? null),
+            change:
+              typeof data.volume24hChangePct === "number"
+                ? Number.parseFloat(data.volume24hChangePct.toFixed(1))
+                : 0,
           },
         ]
 

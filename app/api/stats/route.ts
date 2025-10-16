@@ -12,6 +12,9 @@ interface StatsResponseBody {
     solPriceUsd: number | null
     tvlUsd: number | null
     volume24hUsd: number | null
+    solChange24hPct?: number | null
+    tvlChange24hPct?: number | null
+    volume24hChangePct?: number | null
 }
 
 export async function GET() {
@@ -61,6 +64,25 @@ export async function GET() {
         }
     })()
 
+    const solPrice24hAgoPromise = (async () => {
+        try {
+            const nowSec = Math.floor(Date.now() / 1000)
+            const t24 = nowSec - 86400
+            const res = await fetch(
+                `https://coins.llama.fi/prices/historical/${t24}/coingecko:solana?searchWidth=2400`,
+                { next: { revalidate: 600 } },
+            )
+            if (!res.ok) return null
+            const json = (await res.json()) as {
+                coins?: Record<string, { price?: number }>
+            }
+            const price = json.coins?.["coingecko:solana"]?.price
+            return typeof price === "number" ? price : null
+        } catch {
+            return null
+        }
+    })()
+
     const tvlPromise = (async () => {
         try {
             const res = await fetch("https://api.llama.fi/v2/chains", { next: { revalidate: 300 } })
@@ -86,14 +108,66 @@ export async function GET() {
         }
     })()
 
-    const [tps, solPriceUsd, tvlUsd, volume24hUsd] = await Promise.all([
+    const tvlHistoryPromise = (async () => {
+        try {
+            const res = await fetch("https://api.llama.fi/v2/historicalChainTvl/Solana", { next: { revalidate: 600 } })
+            if (!res.ok) return null
+            const arr = (await res.json()) as Array<{ date: number; tvl: number }>
+            if (!Array.isArray(arr) || arr.length < 2) return null
+            const last = arr[arr.length - 1]?.tvl
+            const prev = arr[arr.length - 2]?.tvl
+            if (typeof last !== "number" || typeof prev !== "number" || prev === 0) return null
+            const change = ((last - prev) / prev) * 100
+            return Number.isFinite(change) ? change : null
+        } catch {
+            return null
+        }
+    })()
+
+    const volumeHistoryPromise = (async () => {
+        try {
+            const url =
+                "https://api.llama.fi/overview/dexs?chain=Solana&excludeTotalDataChart=false&excludeTotalDataChartBreakdown=true"
+            const res = await fetch(url, { next: { revalidate: 600 } })
+            if (!res.ok) return null
+            const json = (await res.json()) as { totalDataChart?: Array<[number, number]> }
+            const chart = json.totalDataChart
+            if (!Array.isArray(chart) || chart.length < 2) return null
+            const last = chart[chart.length - 1]?.[1]
+            const prev = chart[chart.length - 2]?.[1]
+            if (typeof last !== "number" || typeof prev !== "number" || prev === 0) return null
+            const change = ((last - prev) / prev) * 100
+            return Number.isFinite(change) ? change : null
+        } catch {
+            return null
+        }
+    })()
+
+    const [tps, solPriceUsd, solPrice24hAgo, tvlUsd, volume24hUsd, tvlChange24hPct, volume24hChangePct] = await Promise.all([
         tpsPromise,
         solPricePromise,
+        solPrice24hAgoPromise,
         tvlPromise,
         volumePromise,
+        tvlHistoryPromise,
+        volumeHistoryPromise,
     ])
 
-    const body: StatsResponseBody = { tps, solPriceUsd, tvlUsd, volume24hUsd }
+    let solChange24hPct: number | null = null
+    if (typeof solPriceUsd === "number" && typeof solPrice24hAgo === "number" && solPrice24hAgo !== 0) {
+        solChange24hPct = ((solPriceUsd - solPrice24hAgo) / solPrice24hAgo) * 100
+    }
+
+    const body: StatsResponseBody = {
+        tps,
+        solPriceUsd,
+        tvlUsd,
+        volume24hUsd,
+        solChange24hPct: solChange24hPct !== null ? Number.parseFloat(solChange24hPct.toFixed(2)) : null,
+        tvlChange24hPct: typeof tvlChange24hPct === "number" ? Number.parseFloat(tvlChange24hPct.toFixed(2)) : null,
+        volume24hChangePct:
+            typeof volume24hChangePct === "number" ? Number.parseFloat(volume24hChangePct.toFixed(2)) : null,
+    }
 
     return NextResponse.json(body, {
         headers: {

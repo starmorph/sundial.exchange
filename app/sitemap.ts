@@ -1,9 +1,10 @@
+import { getSolanaDexProtocols } from "@/lib/defillama-volumes"
 import type { MetadataRoute } from "next"
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = "https://sundial.exchange"
 
-    return [
+    const staticEntries: MetadataRoute.Sitemap = [
         {
             url: baseUrl,
             lastModified: new Date(),
@@ -22,6 +23,29 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: "hourly",
             priority: 0.8,
         },
+        {
+            url: `${baseUrl}/dex-analytics`,
+            lastModified: new Date(),
+            changeFrequency: "hourly",
+            priority: 0.85,
+        },
     ]
+
+    try {
+        const protocols = await getSolanaDexProtocols()
+        const dynamicEntries: MetadataRoute.Sitemap = (protocols || [])
+            .filter((p) => !!p.slug)
+            .map((p) => ({
+                url: `${baseUrl}/dex-analytics/${p.slug}`,
+                lastModified: new Date(),
+                changeFrequency: "hourly",
+                priority: 0.7,
+            }))
+
+        return [...staticEntries, ...dynamicEntries]
+    } catch {
+        // If fetching fails, return static entries so sitemap still works
+        return staticEntries
+    }
 }
 

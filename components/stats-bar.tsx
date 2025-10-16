@@ -153,7 +153,7 @@ export function StatsBar() {
                     <TrendingDown className="h-3 w-3" />
                   )}
                   <span className="tabular-nums min-w-[5ch] text-right inline-block">
-                    {Math.abs(stat.change ?? 0)}%
+                    {(Math.abs(stat.change ?? 0)).toFixed(1)}%
                   </span>
                 </motion.div>
               </div>

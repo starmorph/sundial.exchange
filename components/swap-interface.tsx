@@ -243,6 +243,9 @@ export default function SwapInterface() {
       console.log("[v0] Jupiter Ultra API execution result:", result)
 
       if (result.status === "Success" && result.signature) {
+        const feeMint = (currentQuote as any)?.feeMint ?? currentQuote?.feeMint ?? null
+        const feeBps = (currentQuote as any)?.feeBps ?? currentQuote?.feeBps ?? null
+        console.log("[v0] Referral fee:", { feeMint, feeBps })
         console.log("[v0] Swap successful! Transaction signature:", result.signature)
         console.log(`[v0] View on Solscan: https://solscan.io/tx/${result.signature}`)
 
@@ -256,10 +259,16 @@ export default function SwapInterface() {
           fetchBalances()
         }, 2000)
       } else {
+        const feeMint = (currentQuote as any)?.feeMint ?? currentQuote?.feeMint ?? null
+        const feeBps = (currentQuote as any)?.feeBps ?? currentQuote?.feeBps ?? null
+        console.log("[v0] Referral fee (from quote) on failure:", { feeMint, feeBps })
         setSwapError(result.error || "Swap failed")
         console.error("[v0] Swap failed:", result)
       }
     } catch (error: any) {
+      const feeMint = (currentQuote as any)?.feeMint ?? currentQuote?.feeMint ?? null
+      const feeBps = (currentQuote as any)?.feeBps ?? currentQuote?.feeBps ?? null
+      console.log("[v0] Referral fee (from quote) on exception:", { feeMint, feeBps })
       console.error("[v0] Error during swap execution:", error)
       setSwapError(error.message || "Swap failed")
     } finally {

@@ -42,6 +42,13 @@ export const SOLANA_TOKENS: SolanaToken[] = [
     volume24h: "$14.9B", // Included as high-volume stable
   },
   {
+    symbol: "USDT",
+    name: "Tether USD",
+    icon: "💵",
+    mint: SOLANA_TOKEN_MINTS.USDT,
+    decimals: 6,
+  },
+  {
     symbol: "TRUMP",
     name: "Official Trump",
     icon: "🇺🇸", // Placeholder; fetch real icon via API
@@ -58,22 +65,6 @@ export const SOLANA_TOKENS: SolanaToken[] = [
     volume24h: "$370M",
   },
   {
-    symbol: "FARTCOIN",
-    name: "Fartcoin",
-    icon: "💨",
-    mint: SOLANA_TOKEN_MINTS.FARTCOIN,
-    decimals: 6,
-    volume24h: "$228M",
-  },
-  {
-    symbol: "USELESS",
-    name: "Useless Coin",
-    icon: "🗑️",
-    mint: SOLANA_TOKEN_MINTS.USELESS,
-    decimals: 6,
-    volume24h: "$167M",
-  },
-  {
     symbol: "WIF",
     name: "dogwifhat",
     icon: "🐕‍🦺",
@@ -82,28 +73,46 @@ export const SOLANA_TOKENS: SolanaToken[] = [
     volume24h: "$362M",
   },
   {
-    symbol: "BONK",
-    name: "Bonk",
-    icon: "🐕",
-    mint: SOLANA_TOKEN_MINTS.BONK,
-    decimals: 5,
-    volume24h: "$341M",
+    symbol: "JUP",
+    name: "Jupiter",
+    icon: "🪐",
+    mint: SOLANA_TOKEN_MINTS.JUP,
+    decimals: 6,
   },
   {
-    symbol: "TROLL",
-    name: "TROLL",
-    icon: "👹",
-    mint: SOLANA_TOKEN_MINTS.TROLL,
+    symbol: "JLP",
+    name: "Jupiter LP",
+    icon: "💧",
+    mint: SOLANA_TOKEN_MINTS.JLP,
     decimals: 6,
-    volume24h: "$85M", // Aggregated from pairs
   },
   {
-    symbol: "PENGU",
-    name: "Pudgy Penguins",
-    icon: "🐧",
-    mint: "5S0oK8b7J1b5zA6zZ3b5zA6zZ3b5zA6zZ3b5zA6zZ3b5", // Example; verify via API (actual: 6zK4b5F7U7tA9vXbYcD2eF3gH4iJ5kL6mN7oP8qR9sT0)
+    symbol: "PYUSD",
+    name: "PayPal USD",
+    icon: "💰",
+    mint: SOLANA_TOKEN_MINTS.PYUSD,
     decimals: 6,
-    volume24h: "$415M",
+  },
+  {
+    symbol: "EURC",
+    name: "Euro Coin",
+    icon: "💶",
+    mint: SOLANA_TOKEN_MINTS.EURC,
+    decimals: 6,
+  },
+  {
+    symbol: "cbBTC",
+    name: "Coinbase Wrapped BTC",
+    icon: "₿",
+    mint: SOLANA_TOKEN_MINTS.cbBTC,
+    decimals: 6,
+  },
+  {
+    symbol: "KMNO",
+    name: "Kamino",
+    icon: "🧪",
+    mint: SOLANA_TOKEN_MINTS.KMNO,
+    decimals: 6,
   },
   // Extend with more from API (e.g., Fefe, LAUNCHCOIN)
 ];

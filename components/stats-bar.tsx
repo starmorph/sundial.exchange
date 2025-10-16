@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { TrendingUp, TrendingDown } from "lucide-react"
+import { AnimatePresence, motion } from "framer-motion"
+import { TrendingDown, TrendingUp } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 
 interface StatItem {
   label: string
@@ -20,42 +20,92 @@ export function StatsBar() {
     { label: "24H VOL", value: "892M", change: 8.7, prefix: "$" },
   ])
 
-  // Simulate real-time updates
+  const prevRef = useRef<{ tps?: number; sol?: number; tvl?: number; vol?: number }>({})
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      setStats((prevStats) =>
-        prevStats.map((stat) => {
-          const randomChange = (Math.random() - 0.5) * 10
-          let newValue: string
+    let isMounted = true
 
-          if (stat.label === "TPS") {
-            const currentVal = Number.parseInt(stat.value.replace(/,/g, ""))
-            const newVal = Math.max(1000, currentVal + Math.floor(randomChange * 100))
-            newValue = newVal.toLocaleString()
-          } else if (stat.label === "SOL") {
-            const currentVal = Number.parseFloat(stat.value)
-            const newVal = Math.max(100, currentVal + randomChange * 0.5)
-            newValue = newVal.toFixed(2)
-          } else if (stat.label === "TVL") {
-            const currentVal = Number.parseFloat(stat.value.replace("B", ""))
-            const newVal = Math.max(3, currentVal + randomChange * 0.01)
-            newValue = newVal.toFixed(1) + "B"
-          } else {
-            const currentVal = Number.parseFloat(stat.value.replace("M", ""))
-            const newVal = Math.max(500, currentVal + randomChange * 2)
-            newValue = newVal.toFixed(0) + "M"
-          }
+    const computeChangePct = (prev: number | undefined, curr: number | null): number | undefined => {
+      if (typeof prev !== "number" || prev <= 0 || curr === null) return undefined
+      const pct = ((curr - prev) / prev) * 100
+      return Number.parseFloat(pct.toFixed(1))
+    }
 
-          return {
-            ...stat,
-            value: newValue,
-            change: Number.parseFloat((randomChange * 0.3).toFixed(1)),
-          }
-        }),
-      )
-    }, 3000)
+    const computeChangePctWithThreshold = (
+      prev: number | undefined,
+      curr: number | null,
+      thresholdPct: number,
+    ): number | undefined => {
+      const val = computeChangePct(prev, curr)
+      if (typeof val !== "number") return undefined
+      return Math.abs(val) < thresholdPct ? 0 : val
+    }
 
-    return () => clearInterval(interval)
+    const fmtNumber = (n: number): string => n.toLocaleString()
+    const fmtUsd = (n: number): string => n.toFixed(2)
+    const fmtUsdBillions = (n: number): string => (n / 1_000_000_000).toFixed(1) + "B"
+    const fmtUsdCompact = (n: number): string =>
+      n >= 1_000_000_000 ? (n / 1_000_000_000).toFixed(1) + "B" : (n / 1_000_000).toFixed(0) + "M"
+
+    const tick = async () => {
+      try {
+        const res = await fetch("/api/stats", { cache: "no-store" })
+        if (!res.ok) return
+        const data: { tps: number | null; solPriceUsd: number | null; tvlUsd: number | null; volume24hUsd: number | null } =
+          await res.json()
+        if (!isMounted) return
+
+        const prev = prevRef.current
+        const tpsVal = data.tps ?? null
+        const solVal = data.solPriceUsd ?? null
+        const tvlVal = data.tvlUsd ?? null
+        const volVal = data.volume24hUsd ?? null
+
+        const nextStats: StatItem[] = [
+          {
+            label: "TPS",
+            value: tpsVal !== null ? fmtNumber(tpsVal) : stats[0]?.value,
+            change: computeChangePctWithThreshold(prev.tps, tpsVal ?? null, 0.2),
+            suffix: "",
+          },
+          {
+            label: "SOL",
+            prefix: "$",
+            value: solVal !== null ? fmtUsd(solVal) : stats[1]?.value,
+            change: computeChangePct(prev.sol, solVal ?? null),
+          },
+          {
+            label: "TVL",
+            prefix: "$",
+            value: tvlVal !== null ? fmtUsdBillions(tvlVal) : stats[2]?.value,
+            change: computeChangePct(prev.tvl, tvlVal ?? null),
+          },
+          {
+            label: "24H VOL",
+            prefix: "$",
+            value: volVal !== null ? fmtUsdCompact(volVal) : stats[3]?.value,
+            change: computeChangePct(prev.vol, volVal ?? null),
+          },
+        ]
+
+        setStats(nextStats)
+        prevRef.current = {
+          tps: tpsVal ?? prev.tps,
+          sol: solVal ?? prev.sol,
+          tvl: tvlVal ?? prev.tvl,
+          vol: volVal ?? prev.vol,
+        }
+      } catch {
+        // ignore transient errors
+      }
+    }
+
+    tick()
+    const id = setInterval(tick, 3000)
+    return () => {
+      isMounted = false
+      clearInterval(id)
+    }
   }, [])
 
   return (
@@ -80,18 +130,21 @@ export function StatsBar() {
                     {stat.suffix}
                   </motion.span>
                 </AnimatePresence>
-                {stat.change !== undefined && (
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className={`flex items-center gap-0.5 text-xs font-mono ${
-                      stat.change >= 0 ? "text-green-500" : "text-red-500"
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className={`flex items-center gap-0.5 text-xs font-mono ${(stat.change ?? 0) >= 0 ? "text-green-500" : "text-red-500"
                     }`}
-                  >
-                    {stat.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    <span>{Math.abs(stat.change)}%</span>
-                  </motion.div>
-                )}
+                >
+                  {(stat.change ?? 0) >= 0 ? (
+                    <TrendingUp className="h-3 w-3" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3" />
+                  )}
+                  <span className="tabular-nums min-w-[5ch] text-right inline-block">
+                    {Math.abs(stat.change ?? 0)}%
+                  </span>
+                </motion.div>
               </div>
               {index < stats.length - 1 && <div className="h-4 w-px bg-border/50 ml-2" />}
             </div>

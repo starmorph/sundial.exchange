@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getDexProtocolDetails } from "@/lib/defillama-volumes"
 import { motion } from "framer-motion"
 import { ArrowLeft, BarChart3, DollarSign, ExternalLink, Globe, TrendingDown, TrendingUp } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
@@ -26,7 +25,8 @@ export default function IndividualDexPage() {
     async function loadProtocolData() {
         setLoading(true)
         try {
-            const data = await getDexProtocolDetails(dexId)
+            const res = await fetch(`/api/dex/protocol/${dexId}`)
+            const data = res.ok ? await res.json() : null
             setProtocolData(data)
         } catch (error) {
             console.error("[v0] Error loading protocol data:", error)

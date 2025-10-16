@@ -46,7 +46,10 @@ const DEFILLAMA_API = "https://api.llama.fi"
 
 export async function getSolanaDexVolumes(): Promise<DexVolumeData[]> {
   try {
-    const response = await fetch(`${DEFILLAMA_API}/overview/dexs?excludeTotalDataChart=false`)
+    const response = await fetch(
+      `${DEFILLAMA_API}/overview/dexs?excludeTotalDataChart=false`,
+      { next: { revalidate: 600, tags: ["defillama:dex:overview"] } },
+    )
     if (!response.ok) {
       throw new Error(`Failed to fetch DEX overview: ${response.status}`)
     }
@@ -95,7 +98,9 @@ export async function getSolanaDexVolumes(): Promise<DexVolumeData[]> {
 
 export async function getDexProtocolSummary(protocol: string): Promise<DexProtocolSummary | null> {
   try {
-    const response = await fetch(`${DEFILLAMA_API}/summary/dexs/${protocol}`)
+    const response = await fetch(`${DEFILLAMA_API}/summary/dexs/${protocol}`, {
+      next: { revalidate: 600, tags: ["defillama:dex:protocol", `defillama:dex:protocol:${protocol}`] },
+    })
     if (!response.ok) {
       throw new Error(`Failed to fetch protocol summary: ${response.status}`)
     }
@@ -112,7 +117,9 @@ export async function getDexProtocolSummary(protocol: string): Promise<DexProtoc
 export async function getSolanaDexProtocols(): Promise<DexProtocolSummary[]> {
   try {
     // Get all DEX protocols
-    const response = await fetch(`${DEFILLAMA_API}/overview/dexs?excludeTotalDataChart=true`)
+    const response = await fetch(`${DEFILLAMA_API}/overview/dexs?chain=Solana&excludeTotalDataChart=true`, {
+      next: { revalidate: 900, tags: ["defillama:dex:protocols"] },
+    })
     if (!response.ok) {
       throw new Error(`Failed to fetch DEX protocols: ${response.status}`)
     }
@@ -134,7 +141,9 @@ export async function getSolanaDexProtocols(): Promise<DexProtocolSummary[]> {
 
 export async function getDexProtocolDetails(protocol: string): Promise<any> {
   try {
-    const response = await fetch(`${DEFILLAMA_API}/summary/dexs/${protocol}`)
+    const response = await fetch(`${DEFILLAMA_API}/summary/dexs/${protocol}`, {
+      next: { revalidate: 600, tags: ["defillama:dex:protocol", `defillama:dex:protocol:${protocol}`] },
+    })
     if (!response.ok) {
       throw new Error(`Failed to fetch protocol details: ${response.status}`)
     }

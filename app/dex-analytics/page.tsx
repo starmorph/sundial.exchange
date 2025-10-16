@@ -4,12 +4,7 @@ import { Navbar } from '@/components/navbar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  getSolanaDexProtocols,
-  getSolanaDexVolumes,
-  type DexProtocolSummary,
-  type DexVolumeData,
-} from "@/lib/defillama-volumes"
+import { type DexProtocolSummary, type DexVolumeData } from "@/lib/defillama-volumes"
 import { motion } from "framer-motion"
 import { BarChart3, DollarSign, TrendingDown, TrendingUp } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -29,13 +24,14 @@ export default function DexAnalyticsPage() {
   async function loadData() {
     setLoading(true)
     try {
-      const protocolsData = await getSolanaDexProtocols()
-      setProtocols(protocolsData.sort((a, b) => (b.total24h || 0) - (a.total24h || 0)))
-
-      const volumes = await getSolanaDexVolumes()
-      console.log("[v0] Volume data points:", volumes.length)
-      console.log("[v0] Sample volume data:", volumes.slice(-5))
-      setVolumeData(volumes)
+      const res = await fetch("/api/dex/overview")
+      if (res.ok) {
+        const json = (await res.json()) as { protocols: DexProtocolSummary[]; volumes: DexVolumeData[] }
+        setProtocols(json.protocols.sort((a, b) => (b.total24h || 0) - (a.total24h || 0)))
+        console.log("[v0] Volume data points:", json.volumes.length)
+        console.log("[v0] Sample volume data:", json.volumes.slice(-5))
+        setVolumeData(json.volumes)
+      }
     } catch (error) {
       console.error("[v0] Error loading DEX analytics data:", error)
     } finally {

@@ -131,3 +131,19 @@ export async function getSolanaDexProtocols(): Promise<DexProtocolSummary[]> {
     return []
   }
 }
+
+export async function getDexProtocolDetails(protocol: string): Promise<any> {
+  try {
+    const response = await fetch(`${DEFILLAMA_API}/summary/dexs/${protocol}`)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch protocol details: ${response.status}`)
+    }
+
+    const data = await response.json()
+    console.log(`[v0] Protocol details for ${protocol}:`, data)
+    return data
+  } catch (error) {
+    console.error(`[v0] Error fetching protocol details for ${protocol}:`, error)
+    return null
+  }
+}

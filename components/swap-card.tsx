@@ -1,8 +1,8 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { TokenSelector } from "@/components/token-selector"
 import type { Token } from "@/components/swap-interface"
+import { TokenSelector } from "@/components/token-selector"
+import { Button } from "@/components/ui/button"
 
 interface SwapCardProps {
   label: string
@@ -30,12 +30,14 @@ export function SwapCard({
   const usdValue = amount ? `≈ $${(Number(amount) * token.price).toFixed(2)}` : "≈ $0.00"
 
   return (
-    <div className="rounded-2xl border-2 border-primary/30 bg-card p-6 space-y-4 overflow-visible">
+    <div className="rounded-2xl border-2 border-primary/30 bg-card p-6 my-2 space-y-4 overflow-visible">
       <div className="text-sm text-muted-foreground">{label}</div>
 
       <div className="flex items-center justify-between gap-4 overflow-visible">
         <input
           type="text"
+          inputMode="decimal"
+          pattern="[0-9]*[.,]?[0-9]*"
           value={amount}
           onChange={(e) => onAmountChange(e.target.value)}
           placeholder="0"

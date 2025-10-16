@@ -1,4 +1,5 @@
 import { SolanaWalletProvider } from "@/components/wallet-provider"
+import { GoogleAnalytics } from "@next/third-parties/google"
 import { Analytics } from "@vercel/analytics/next"
 import { GeistMono } from "geist/font/mono"
 import { GeistSans } from "geist/font/sans"
@@ -116,6 +117,8 @@ export default function RootLayout({
           <SolanaWalletProvider>{children}</SolanaWalletProvider>
         </Suspense>
         <Analytics />
+        <GoogleAnalytics gaId="AW-956110971" />
+
       </body>
     </html>
   )

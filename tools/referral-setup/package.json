@@ -6,6 +6,7 @@
     "scripts": {
         "init:referral": "tsx src/initReferral.ts",
         "init:token": "tsx src/initReferralToken.ts",
+        "init:stables": "tsx src/initStableReferralTokens.ts",
         "claim": "tsx src/claimAll.ts",
         "sweep": "tsx src/sweep.ts"
     },

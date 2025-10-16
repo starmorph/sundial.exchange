@@ -222,6 +222,19 @@ export default function SwapInterface() {
     setSwapError(null)
 
     try {
+      // log attempt
+      fetch("/api/swap-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "attempt",
+          inputMint: sellToken?.mint,
+          outputMint: buyToken?.mint,
+          sellAmount,
+          taker: publicKey.toString(),
+        }),
+        cache: "no-store",
+      }).catch(() => { })
       console.log("[v0] Starting swap with Jupiter Ultra API, quote:", currentQuote)
 
       // Deserialize the transaction
@@ -243,6 +256,22 @@ export default function SwapInterface() {
       console.log("[v0] Jupiter Ultra API execution result:", result)
 
       if (result.status === "Success" && result.signature) {
+        // log success
+        fetch("/api/swap-log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event: "success",
+            requestId: currentQuote.requestId,
+            signature: result.signature,
+            inputMint: sellToken?.mint,
+            outputMint: buyToken?.mint,
+            inAmount: sellAmount,
+            outAmount: buyAmount,
+            taker: publicKey.toString(),
+          }),
+          cache: "no-store",
+        }).catch(() => { })
         const feeMint = (currentQuote as any)?.feeMint ?? currentQuote?.feeMint ?? null
         const feeBps = (currentQuote as any)?.feeBps ?? currentQuote?.feeBps ?? null
         console.log("[v0] Referral fee:", { feeMint, feeBps })
@@ -259,6 +288,22 @@ export default function SwapInterface() {
           fetchBalances()
         }, 2000)
       } else {
+        // log failure
+        fetch("/api/swap-log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event: "failed",
+            requestId: currentQuote?.requestId,
+            error: result.error ?? "unknown",
+            inputMint: sellToken?.mint,
+            outputMint: buyToken?.mint,
+            inAmount: sellAmount,
+            outAmount: buyAmount,
+            taker: publicKey.toString(),
+          }),
+          cache: "no-store",
+        }).catch(() => { })
         const feeMint = (currentQuote as any)?.feeMint ?? currentQuote?.feeMint ?? null
         const feeBps = (currentQuote as any)?.feeBps ?? currentQuote?.feeBps ?? null
         console.log("[v0] Referral fee (from quote) on failure:", { feeMint, feeBps })
@@ -266,6 +311,22 @@ export default function SwapInterface() {
         console.error("[v0] Swap failed:", result)
       }
     } catch (error: any) {
+      // log exception
+      fetch("/api/swap-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "exception",
+          requestId: currentQuote?.requestId,
+          error: error?.message ?? "unknown",
+          inputMint: sellToken?.mint,
+          outputMint: buyToken?.mint,
+          inAmount: sellAmount,
+          outAmount: buyAmount,
+          taker: publicKey?.toString() ?? null,
+        }),
+        cache: "no-store",
+      }).catch(() => { })
       const feeMint = (currentQuote as any)?.feeMint ?? currentQuote?.feeMint ?? null
       const feeBps = (currentQuote as any)?.feeBps ?? currentQuote?.feeBps ?? null
       console.log("[v0] Referral fee (from quote) on exception:", { feeMint, feeBps })

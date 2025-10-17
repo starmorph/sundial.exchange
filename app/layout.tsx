@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     siteName: "Sundial Exchange",
     images: [
       {
-        url: "/opengraph-image",
+        url: "/opengraph-image.png",
         width: 1200,
         height: 630,
         alt: "Sundial Exchange – Solana DEX | Best Rates, Low Fees",
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     title: "Sundial Exchange – Solana DEX | Best Rates, Low Fees",
     description:
       "Instant, secure token swaps on Solana with optimal routing, low fees, and a streamlined trading experience.",
-    images: ["/opengraph-image"],
+    images: ["/opengraph-image.png"],
     creator: "@sundialexchange",
   },
   robots: {

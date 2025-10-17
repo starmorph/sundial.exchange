@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { executeJupiterOrder, getHoldings, getJupiterOrder } from "@/lib/jupiter-ultra"
 import { fromTokenAmount, SOLANA_TOKENS, toTokenAmount, type SolanaToken } from "@/lib/solana-tokens"
 import { useConnection, useWallet } from "@solana/wallet-adapter-react"
+import { useWalletModal } from "@solana/wallet-adapter-react-ui"
 import { VersionedTransaction } from "@solana/web3.js"
 import { ArrowDownUp, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -18,6 +19,7 @@ export type Token = SolanaToken & {
 export default function SwapInterface() {
   const { publicKey, signTransaction, connected } = useWallet()
   const { connection } = useConnection()
+  const { setVisible } = useWalletModal()
 
   const [orderType, setOrderType] = useState<"instant" | "limit">("instant")
   const [tokens, setTokens] = useState<Token[]>([])
@@ -454,7 +456,7 @@ export default function SwapInterface() {
 
       {/* Big Swap Action Button */}
       <Button
-        onClick={connected ? handleSwap : undefined}
+        onClick={connected ? handleSwap : () => setVisible(true)}
         disabled={swapButtonState.disabled}
         className="w-full h-14 text-lg font-semibold rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-primary via-primary to-accent hover:from-primary/90 hover:via-primary/90 hover:to-accent/90 shadow-lg hover:shadow-xl disabled:shadow-none"
       >

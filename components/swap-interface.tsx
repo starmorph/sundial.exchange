@@ -43,6 +43,21 @@ export default function SwapInterface() {
     setBuyToken(initTokens[0]) // SOL
   }, [])
 
+  // Keep selected tokens in sync with latest balances from `tokens`
+  useEffect(() => {
+    if (!tokens.length) return
+    setSellToken((current) => {
+      if (!current) return current
+      const updated = tokens.find((t) => t.mint === current.mint)
+      return updated ?? current
+    })
+    setBuyToken((current) => {
+      if (!current) return current
+      const updated = tokens.find((t) => t.mint === current.mint)
+      return updated ?? current
+    })
+  }, [tokens])
+
   useEffect(() => {
     if (connected && publicKey) {
       fetchBalances()

@@ -1,3 +1,4 @@
+import { Footer } from '@/components/footer'
 import { SolanaWalletProvider } from "@/components/wallet-provider"
 import { GoogleAnalytics } from "@next/third-parties/google"
 import { Analytics } from "@vercel/analytics/next"
@@ -120,7 +121,9 @@ export default function RootLayout({
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} overflow-x-hidden w-full max-w-[100vw]`}>
         <Suspense fallback={<div>Loading...</div>}>
-          <SolanaWalletProvider>{children}</SolanaWalletProvider>
+          <SolanaWalletProvider>{children}
+            <Footer />
+          </SolanaWalletProvider>
         </Suspense>
         <Analytics />
         <GoogleAnalytics gaId="AW-956110971" />

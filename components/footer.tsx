@@ -119,10 +119,10 @@ export function Footer() {
 
             {/* Legal links */}
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <Link href="#" className="hover:text-primary transition-colors">
+              <Link href="/terms-of-service" className="hover:text-primary transition-colors">
                 Terms of Service
               </Link>
-              <Link href="#" className="hover:text-primary transition-colors">
+              <Link href="/privacy-policy" className="hover:text-primary transition-colors">
                 Privacy Policy
               </Link>
               <div className="text-xs">© 2025 Sundial Exchange.</div>

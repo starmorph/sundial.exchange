@@ -1,9 +1,10 @@
 "use client"
 
 import { SwapCard } from "@/components/swap-card"
+import SwapRouting from "@/components/swap-routing"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { executeJupiterOrder, getHoldings, getJupiterOrder } from "@/lib/jupiter-ultra"
+import { executeJupiterOrder, getHoldings, getJupiterOrder, type JupiterOrderResponse } from "@/lib/jupiter-ultra"
 import { fromTokenAmount, SOLANA_TOKENS, toTokenAmount, type SolanaToken } from "@/lib/solana-tokens"
 import { useConnection, useWallet } from "@solana/wallet-adapter-react"
 import { useWalletModal } from "@solana/wallet-adapter-react-ui"
@@ -30,7 +31,7 @@ export default function SwapInterface() {
   const [isSwapping, setIsSwapping] = useState(false)
   const [isFetchingQuote, setIsFetchingQuote] = useState(false)
   const [swapError, setSwapError] = useState<string | null>(null)
-  const [currentQuote, setCurrentQuote] = useState<any>(null)
+  const [currentQuote, setCurrentQuote] = useState<JupiterOrderResponse | null>(null)
 
   useEffect(() => {
     const initTokens = SOLANA_TOKENS.map((token) => ({
@@ -479,8 +480,10 @@ export default function SwapInterface() {
         {swapButtonState.text}
       </Button>
 
-      {/* Exchange Rate */}
-      {exchangeRate && <div className="text-sm text-muted-foreground">{exchangeRate}</div>}
+
+
+      {/* Routing Visualization */}
+      {currentQuote && <SwapRouting quote={currentQuote} />}
     </div>
   )
 }

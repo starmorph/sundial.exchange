@@ -34,8 +34,15 @@ export function Navbar() {
             href="/dex-analytics"
             className="flex items-center gap-1.5 px-3 h-8 rounded-md bg-muted/50 border border-border/50 hover:bg-muted/70 transition-all text-xs font-mono font-semibold text-muted-foreground hover:text-foreground tracking-wide"
           >
-
             ANALYTICS
+          </Link>
+          <Link
+            href="https://registry.scalar.com/@starmorph/apis/sundial-exchange-api/latest"
+            target="_blank"
+            rel="noreferrer"
+            className="ml-2 flex items-center gap-1.5 px-3 h-8 rounded-md bg-primary/10 border border-primary/50 hover:bg-primary/20 transition-all text-xs font-mono font-semibold text-primary hover:text-primary/90 tracking-wide"
+          >
+            API DOCS
           </Link>
           <Button
             variant="outline"

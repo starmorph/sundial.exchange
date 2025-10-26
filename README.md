@@ -120,7 +120,34 @@ Create a `.env.local` file:
 NEXT_PUBLIC_SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 NEXT_PUBLIC_ULTRA_REFERRAL_ACCOUNT=
 NEXT_PUBLIC_ULTRA_REFERRAL_FEE_BPS=50
+
+# x402 Payment Gateway - Set your Ethereum/Base wallet address
+X402_RECIPIENT_ADDRESS=0xYourEthereumWalletAddress
 ```
+
+### API Payment Gateway (x402)
+
+External API requests require a $0.10 USDC payment to access endpoints. The `middleware.ts` file uses [x402](https://docs.cdp.coinbase.com/x402/quickstart-for-sellers) to enforce HTTP 402 Payment Required for `/api/*` routes.
+
+**Exempted (free access):**
+- ✅ Your own frontend (`localhost:3000`, `sundial.exchange`, `www.sundial.exchange`)
+- ✅ Users browsing your website get free API access
+
+**Payment required:**
+- 💰 External API consumers (curl, Postman, other websites)
+- 💰 AI agents and programmatic access
+- 💰 Anyone without your domain's Origin/Referer headers
+
+**Payment details:**
+- **Network**: Base (Ethereum L2)
+- **Amount**: $0.10 USDC per request
+- **Recipient**: `0xde7ae42f066940c50efeed40fd71dde630148c0a`
+- **Transaction fees**: ~$0.01 on Base
+- **Get wallet**: [Coinbase Wallet](https://www.coinbase.com/wallet) or MetaMask
+
+**Testing:** See `docs/testing-x402.md` for complete testing guide.
+
+**Production ready:** Already configured for Base mainnet!
 
 ## Deployment
 

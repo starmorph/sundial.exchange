@@ -43,6 +43,8 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/DexVolumeData"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
         "500":
           description: Server error
           content:
@@ -75,6 +77,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
         "500":
           description: Server error
           content:
@@ -95,6 +99,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StatsResponse"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
 
   /api/trending:
     get:
@@ -119,6 +125,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/NormalizedTrendingToken"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
         "500":
           description: Server error
           content:
@@ -141,9 +149,73 @@ paths:
       responses:
         "204":
           description: Logged successfully, no content
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
 
 components:
+  responses:
+    PaymentRequired:
+      description: Payment required to access this resource. Contains x402 payment instructions.
+      headers:
+        X-PAYMENT-REQUIRED:
+          schema:
+            type: string
+            enum: ["true"]
+          description: Indicates payment is required
+        X-PAYMENT-SCHEME:
+          schema:
+            type: string
+            enum: ["x402"]
+          description: Payment scheme identifier
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/X402Challenge"
+
   schemas:
+    X402Challenge:
+      type: object
+      description: x402 payment challenge containing payment requirements
+      required: [scheme, amountUsdCents, network, to, description, resource]
+      properties:
+        scheme:
+          type: string
+          enum: ["x402"]
+          description: Payment scheme identifier
+        amountUsdCents:
+          type: integer
+          example: 10
+          description: Payment amount in USD cents
+        network:
+          type: string
+          enum: ["base", "base-sepolia"]
+          description: Blockchain network for payment
+        to:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+          example: "0xde7ae42f066940c50efeed40fd71dde630148c0a"
+          description: Recipient Ethereum address
+        description:
+          type: string
+          example: "Payment required to access Sundial API"
+          description: Human-readable payment description
+        resource:
+          type: string
+          example: "/api/stats"
+          description: Resource path being accessed
+        nonce:
+          type: string
+          description: Unique identifier for replay protection
+        expiresAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when payment challenge expires
+        facilitatorVerifyUrl:
+          type: string
+          format: uri
+          example: "https://x402.org/facilitator"
+          description: URL for payment verification
+
     ErrorResponse:
       type: object
       required: [error]

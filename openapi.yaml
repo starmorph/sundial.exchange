@@ -2,7 +2,24 @@ openapi: 3.1.0
 info:
   title: Sundial Exchange API
   version: 1.0.0
-  description: Public API endpoints for Sundial Exchange.
+  description: |
+    Public API endpoints for Sundial Exchange.
+
+    ## Payment Gateway
+
+    External API requests require a $0.10 USDC payment via the x402 protocol.
+    Clients can choose to pay on either:
+    - **Base** (Ethereum L2)
+    - **Solana**
+
+    Payments are processed through the [PayAI facilitator](https://facilitator.payai.network/) with zero gas fees.
+
+    ### Exemptions
+
+    The following origins are exempt from payment requirements:
+    - `http://localhost:3000` (development)
+    - `https://sundial.exchange` (production)
+    - `https://www.sundial.exchange` (production with www)
 servers:
   - url: https://sundial.exchange
     description: Production
@@ -171,11 +188,60 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/X402Challenge"
+          example:
+            x402Version: 1
+            error: "X-PAYMENT header is required"
+            accepts:
+              - scheme: "exact"
+                network: "base"
+                maxAmountRequired: "100000"
+                resource: "https://sundial.exchange/api/stats"
+                description: "Access /api/stats - Sundial Exchange API (Base)"
+                mimeType: "application/json"
+                payTo: "0xde7ae42f066940c50efeed40fd71dde630148c0a"
+                maxTimeoutSeconds: 300
+                asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                outputSchema:
+                  type: "object"
+                  properties:
+                    tps:
+                      type: ["number", "null"]
+                      description: "Transactions per second"
+                    solPriceUsd:
+                      type: ["number", "null"]
+                      description: "SOL price in USD"
+                extra:
+                  name: "USD Coin"
+                  version: "2"
+              - scheme: "exact"
+                network: "solana"
+                maxAmountRequired: "100000"
+                resource: "https://sundial.exchange/api/stats"
+                description: "Access /api/stats - Sundial Exchange API (Solana)"
+                mimeType: "application/json"
+                payTo: "Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K"
+                maxTimeoutSeconds: 300
+                asset: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+                outputSchema:
+                  type: "object"
+                  properties:
+                    tps:
+                      type: ["number", "null"]
+                      description: "Transactions per second"
+                    solPriceUsd:
+                      type: ["number", "null"]
+                      description: "SOL price in USD"
+                extra:
+                  name: "USD Coin"
+                  version: "2"
 
   schemas:
     X402Challenge:
       type: object
-      description: x402 payment challenge containing payment requirements
+      description: |
+        x402 payment challenge containing payment requirements.
+        The challenge includes options for both Base and Solana networks.
+        Clients can choose which network to use for payment.
       required: [x402Version, error, accepts]
       properties:
         x402Version:
@@ -188,7 +254,9 @@ components:
           description: Error message indicating payment is required
         accepts:
           type: array
-          description: Array of accepted payment methods
+          description: Array of accepted payment methods (Base and Solana)
+          minItems: 2
+          maxItems: 2
           items:
             $ref: "#/components/schemas/X402PaymentMethod"
 
@@ -203,8 +271,8 @@ components:
           description: Payment scheme type
         network:
           type: string
-          enum: ["base"]
-          description: Blockchain network for payment
+          enum: ["base", "solana"]
+          description: Blockchain network for payment (client chooses)
         maxAmountRequired:
           type: string
           example: "100000"
@@ -222,18 +290,30 @@ components:
           description: MIME type of the resource
         payTo:
           type: string
-          pattern: "^0x[a-fA-F0-9]{40}$"
-          example: "0xDE7Ae42F066940c50EfeEd40Fd71DdE630148C0a"
-          description: Recipient Ethereum address
+          oneOf:
+            - pattern: "^0x[a-fA-F0-9]{40}$"
+              description: Base recipient (Ethereum address)
+            - pattern: "^[1-9A-HJ-NP-Za-km-z]{32,44}$"
+              description: Solana recipient (Base58 address)
+          examples:
+            base: "0xde7ae42f066940c50efeed40fd71dde630148c0a"
+            solana: "Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K"
+          description: Recipient wallet address (format depends on network)
         maxTimeoutSeconds:
           type: integer
           example: 300
           description: Maximum time in seconds to complete payment
         asset:
           type: string
-          pattern: "^0x[a-fA-F0-9]{40}$"
-          example: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-          description: Token contract address (USDC on Base)
+          oneOf:
+            - pattern: "^0x[a-fA-F0-9]{40}$"
+              description: Base USDC contract (ERC-20)
+            - pattern: "^[1-9A-HJ-NP-Za-km-z]{32,44}$"
+              description: Solana USDC contract (SPL Token)
+          examples:
+            base: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+            solana: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+          description: USDC token contract address (format depends on network)
         outputSchema:
           type: object
           description: Schema describing the output format

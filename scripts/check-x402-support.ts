@@ -55,14 +55,25 @@ async function checkSupport() {
             console.log()
         }
 
-        // Check if Solana is supported
-        const solanaSupported = data.kinds.some((kind) =>
-            kind.network.toLowerCase().includes("solana"),
-        )
-        if (solanaSupported) {
-            console.log("🎉 Solana is supported! You can add Solana payments to your middleware.")
+        // Check mainnet support
+        console.log("\n🔍 Mainnet Support:")
+        const baseMainnet = data.kinds.some((kind) => kind.network === "base")
+        const solanaMainnet = data.kinds.some((kind) => kind.network === "solana")
+
+        if (baseMainnet) {
+            console.log("   ✅ Base mainnet supported")
         } else {
-            console.log("⏳ Solana not yet supported. Currently Base only.")
+            console.log("   ⏳ Base mainnet not yet available")
+        }
+
+        if (solanaMainnet) {
+            console.log("   ✅ Solana mainnet supported")
+        } else {
+            console.log("   ⏳ Solana mainnet not yet available")
+        }
+
+        if (!baseMainnet && !solanaMainnet) {
+            console.log("\n⚠️  Only testnets are currently supported (base-sepolia, solana-devnet)")
         }
     } catch (error) {
         console.error("❌ Error checking facilitator support:")

@@ -121,13 +121,17 @@ NEXT_PUBLIC_SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 NEXT_PUBLIC_ULTRA_REFERRAL_ACCOUNT=
 NEXT_PUBLIC_ULTRA_REFERRAL_FEE_BPS=50
 
-# x402 Payment Gateway - Set your Ethereum/Base wallet address
-X402_RECIPIENT_ADDRESS=0xYourEthereumWalletAddress
+# x402 Payment Gateway - Set your wallet addresses
+X402_RECIPIENT_ADDRESS=0xYourBaseWalletAddress
+X402_RECIPIENT_ADDRESS_SOLANA=YourSolanaWalletAddress
+
+# Optional: Custom facilitator URL (defaults to PayAI)
+FACILITATOR_URL=https://facilitator.payai.network
 ```
 
 ### API Payment Gateway (x402)
 
-External API requests require a $0.10 USDC payment to access endpoints. The `middleware.ts` file uses [x402](https://docs.cdp.coinbase.com/x402/quickstart-for-sellers) to enforce HTTP 402 Payment Required for `/api/*` routes.
+External API requests require a $0.10 USDC payment to access endpoints. The `middleware.ts` file uses [x402](https://facilitator.payai.network/) to enforce HTTP 402 Payment Required for `/api/*` routes.
 
 **Exempted (free access):**
 - ✅ Your own frontend (`localhost:3000`, `sundial.exchange`, `www.sundial.exchange`)
@@ -139,20 +143,22 @@ External API requests require a $0.10 USDC payment to access endpoints. The `mid
 - 💰 Anyone without your domain's Origin/Referer headers
 
 **Payment details:**
-- **Network**: Base (Ethereum L2)
+- **Networks**: Base (Ethereum L2) OR Solana (clients choose)
 - **Amount**: $0.10 USDC per request
-- **Recipient**: `0xde7ae42f066940c50efeed40fd71dde630148c0a`
-- **Transaction fees**: ~$0.01 on Base
-- **Get wallet**: [Coinbase Wallet](https://www.coinbase.com/wallet) or MetaMask
+- **Base Recipient**: `0xde7ae42f066940c50efeed40fd71dde630148c0a`
+- **Solana Recipient**: `Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K`
+- **Transaction fees**: Covered by [PayAI facilitator](https://facilitator.payai.network/)
+- **Get wallet**: [Coinbase Wallet](https://www.coinbase.com/wallet), MetaMask, Phantom, or Solflare
 
 **Testing:** See `docs/testing-x402.md` for complete testing guide.
 
-**Production ready:** Already configured for Base mainnet with full settlement tracking!
+**Production ready:** Already configured for Base and Solana mainnets with full settlement tracking!
 
 **Payment tracking:**
-- Full verification and settlement through x402.org facilitator
+- Full verification and settlement through PayAI facilitator
 - Transaction hashes returned in `X-PAYMENT-RESPONSE` header
 - Proper `outputSchema` for API discovery
+- Multi-network support: Base and Solana
 - Check supported networks: `npx tsx scripts/check-x402-support.ts`
 
 ### API Documentation

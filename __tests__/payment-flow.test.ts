@@ -17,7 +17,7 @@ describe('x402 Payment Flow Integration Tests', () => {
             expect(initialResponse.status).toBe(402)
             const challenge = await initialResponse.json()
             expect(challenge.x402Version).toBe(1)
-            expect(challenge.accepts).toHaveLength(1)
+            expect(challenge.accepts).toHaveLength(2) // Base and Solana
 
             // Step 2: Client creates payment based on challenge
             const paymentHeader = 'mock-signed-payment-payload'
@@ -140,7 +140,7 @@ describe('x402 Payment Flow Integration Tests', () => {
             await middleware(request)
 
             expect(mockFetch).toHaveBeenCalledWith(
-                'https://x402.org/facilitator/verify',
+                'https://facilitator.payai.network/verify',
                 expect.objectContaining({
                     method: 'POST',
                     headers: expect.objectContaining({
@@ -185,7 +185,7 @@ describe('x402 Payment Flow Integration Tests', () => {
             await middleware(request)
 
             expect(mockFetch).toHaveBeenCalledWith(
-                'https://x402.org/facilitator/settle',
+                'https://facilitator.payai.network/settle',
                 expect.objectContaining({
                     method: 'POST',
                 }),

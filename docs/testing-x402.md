@@ -1,5 +1,15 @@
 # Testing x402 Payment Gateway
 
+This guide will help you test the x402 payment gateway implementation for the Sundial Exchange API.
+
+## Supported Networks
+
+The API accepts payments on **two networks**:
+- **Base** (Ethereum L2) - USDC payments
+- **Solana** - USDC payments
+
+Clients can choose which network to use for payment. Both cost **$0.10 USDC per request**.
+
 ## How to Test
 
 ### 1. Start the development server

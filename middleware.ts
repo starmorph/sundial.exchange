@@ -8,9 +8,11 @@ const EXEMPT_ORIGINS = [
 ]
 
 const RECIPIENT_ADDRESS = process.env.X402_RECIPIENT_ADDRESS || "0xde7ae42f066940c50efeed40fd71dde630148c0a"
+const RECIPIENT_ADDRESS_SOLANA = process.env.X402_RECIPIENT_ADDRESS_SOLANA || "Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K"
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+const USDC_SOLANA = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 const PRICE_USD_CENTS = 10
-const FACILITATOR_BASE_URL = "https://x402.org/facilitator"
+const FACILITATOR_BASE_URL = process.env.FACILITATOR_URL || "https://facilitator.payai.network"
 
 interface SettlementResponse {
     success: boolean
@@ -99,16 +101,34 @@ function create402Response(request: NextRequest): NextResponse {
         x402Version: 1,
         error: "X-PAYMENT header is required",
         accepts: [
+            // Base payment option
             {
                 scheme: "exact",
                 network: "base",
                 maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(), // USDC has 6 decimals
                 resource,
-                description: `Access ${url.pathname} - Sundial Exchange API`,
+                description: `Access ${url.pathname} - Sundial Exchange API (Base)`,
                 mimeType: "application/json",
                 payTo: RECIPIENT_ADDRESS,
                 maxTimeoutSeconds: 300,
                 asset: USDC_BASE,
+                outputSchema: getOutputSchema(url.pathname),
+                extra: {
+                    name: "USD Coin",
+                    version: "2",
+                },
+            },
+            // Solana payment option
+            {
+                scheme: "exact",
+                network: "solana",
+                maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(), // USDC has 6 decimals
+                resource,
+                description: `Access ${url.pathname} - Sundial Exchange API (Solana)`,
+                mimeType: "application/json",
+                payTo: RECIPIENT_ADDRESS_SOLANA,
+                maxTimeoutSeconds: 300,
+                asset: USDC_SOLANA,
                 outputSchema: getOutputSchema(url.pathname),
                 extra: {
                     name: "USD Coin",
@@ -121,6 +141,24 @@ function create402Response(request: NextRequest): NextResponse {
     return NextResponse.json(challenge, { status: 402 })
 }
 
+function getPaymentNetwork(paymentHeader: string): { network: string; payTo: string; asset: string } | null {
+    try {
+        // Payment header is base64 encoded JSON
+        const decoded = JSON.parse(atob(paymentHeader))
+        const network = decoded.network
+
+        if (network === "base") {
+            return { network: "base", payTo: RECIPIENT_ADDRESS, asset: USDC_BASE }
+        } else if (network === "solana") {
+            return { network: "solana", payTo: RECIPIENT_ADDRESS_SOLANA, asset: USDC_SOLANA }
+        }
+        return null
+    } catch {
+        // If we can't parse, try both networks (facilitator will validate)
+        return { network: "base", payTo: RECIPIENT_ADDRESS, asset: USDC_BASE }
+    }
+}
+
 async function verifyPayment(
     paymentHeader: string,
     request: NextRequest,
@@ -128,6 +166,12 @@ async function verifyPayment(
     try {
         const url = new URL(request.url)
         const resource = `${url.origin}${url.pathname}${url.search}`
+
+        // Extract network info from payment header
+        const networkInfo = getPaymentNetwork(paymentHeader)
+        if (!networkInfo) {
+            return { isValid: false, invalidReason: "Unsupported network" }
+        }
 
         const verifyResponse = await fetch(`${FACILITATOR_BASE_URL}/verify`, {
             method: "POST",
@@ -137,14 +181,14 @@ async function verifyPayment(
                 paymentHeader,
                 paymentRequirements: {
                     scheme: "exact",
-                    network: "base",
+                    network: networkInfo.network,
                     maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
                     resource,
                     description: `Access ${url.pathname} - Sundial Exchange API`,
                     mimeType: "application/json",
-                    payTo: RECIPIENT_ADDRESS,
+                    payTo: networkInfo.payTo,
                     maxTimeoutSeconds: 300,
-                    asset: USDC_BASE,
+                    asset: networkInfo.asset,
                     extra: {
                         name: "USD Coin",
                         version: "2",
@@ -175,6 +219,17 @@ async function settlePayment(
         const url = new URL(request.url)
         const resource = `${url.origin}${url.pathname}${url.search}`
 
+        // Extract network info from payment header
+        const networkInfo = getPaymentNetwork(paymentHeader)
+        if (!networkInfo) {
+            return {
+                success: false,
+                error: "Unsupported network",
+                txHash: null,
+                networkId: null,
+            }
+        }
+
         const settleResponse = await fetch(`${FACILITATOR_BASE_URL}/settle`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -183,14 +238,14 @@ async function settlePayment(
                 paymentHeader,
                 paymentRequirements: {
                     scheme: "exact",
-                    network: "base",
+                    network: networkInfo.network,
                     maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
                     resource,
                     description: `Access ${url.pathname} - Sundial Exchange API`,
                     mimeType: "application/json",
-                    payTo: RECIPIENT_ADDRESS,
+                    payTo: networkInfo.payTo,
                     maxTimeoutSeconds: 300,
-                    asset: USDC_BASE,
+                    asset: networkInfo.asset,
                     extra: {
                         name: "USD Coin",
                         version: "2",

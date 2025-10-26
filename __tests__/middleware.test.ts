@@ -89,7 +89,7 @@ describe('x402 Middleware', () => {
             expect(response.status).toBe(402)
         })
 
-        it('should return valid x402 challenge structure', async () => {
+        it('should return valid x402 challenge structure with both Base and Solana', async () => {
             const request = new NextRequest('http://localhost:3000/api/stats')
 
             const response = await middleware(request)
@@ -106,8 +106,16 @@ describe('x402 Middleware', () => {
                         asset: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
                         maxAmountRequired: '100000', // 0.10 USDC
                     }),
+                    expect.objectContaining({
+                        scheme: 'exact',
+                        network: 'solana',
+                        payTo: 'Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K',
+                        asset: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+                        maxAmountRequired: '100000', // 0.10 USDC
+                    }),
                 ]),
             })
+            expect(body.accepts).toHaveLength(2)
         })
 
         it('should include proper outputSchema for /api/stats', async () => {
@@ -123,7 +131,7 @@ describe('x402 Middleware', () => {
             expect(outputSchema.properties).toHaveProperty('tvlUsd')
         })
 
-        it('should include description in challenge', async () => {
+        it('should include description in challenge for both networks', async () => {
             const request = new NextRequest('http://localhost:3000/api/trending')
 
             const response = await middleware(request)
@@ -131,6 +139,11 @@ describe('x402 Middleware', () => {
 
             expect(body.accepts[0].description).toContain('/api/trending')
             expect(body.accepts[0].description).toContain('Sundial Exchange API')
+            expect(body.accepts[0].description).toContain('Base')
+
+            expect(body.accepts[1].description).toContain('/api/trending')
+            expect(body.accepts[1].description).toContain('Sundial Exchange API')
+            expect(body.accepts[1].description).toContain('Solana')
         })
 
         it('should include proper resource URL', async () => {
@@ -178,7 +191,7 @@ describe('x402 Middleware', () => {
             expect(mockFetch).toHaveBeenCalledTimes(2)
             expect(mockFetch).toHaveBeenNthCalledWith(
                 1,
-                'https://x402.org/facilitator/verify',
+                'https://facilitator.payai.network/verify',
                 expect.objectContaining({
                     method: 'POST',
                     body: expect.stringContaining('valid-payment-header'),
@@ -218,7 +231,7 @@ describe('x402 Middleware', () => {
 
             expect(mockFetch).toHaveBeenNthCalledWith(
                 2,
-                'https://x402.org/facilitator/settle',
+                'https://facilitator.payai.network/settle',
                 expect.objectContaining({
                     method: 'POST',
                 }),
@@ -409,6 +422,200 @@ describe('x402 Middleware', () => {
 
                 expect(response.status).not.toBe(402)
             })
+        })
+    })
+
+    describe('Solana Network Support', () => {
+        it('should accept Solana payment header', async () => {
+            const solanaPaymentHeader = btoa(
+                JSON.stringify({
+                    network: 'solana',
+                    signature: 'mock-solana-signature',
+                }),
+            )
+
+            mockFetch.mockResolvedValueOnce(
+                new Response(JSON.stringify({ isValid: true, invalidReason: null }), {
+                    status: 200,
+                }),
+            )
+
+            mockFetch.mockResolvedValueOnce(
+                new Response(
+                    JSON.stringify({
+                        success: true,
+                        txHash: '5J7Xz...mockSolanaHash',
+                        networkId: 'solana',
+                        error: null,
+                    }),
+                    {
+                        status: 200,
+                    },
+                ),
+            )
+
+            const request = new NextRequest('http://localhost:3000/api/stats', {
+                headers: {
+                    'x-payment': solanaPaymentHeader,
+                },
+            })
+
+            const response = await middleware(request)
+
+            expect(response.status).toBe(200)
+            expect(mockFetch).toHaveBeenCalledWith(
+                'https://facilitator.payai.network/verify',
+                expect.objectContaining({
+                    method: 'POST',
+                    body: expect.stringContaining('"network":"solana"'),
+                }),
+            )
+        })
+
+        it('should use correct Solana USDC contract', async () => {
+            const solanaPaymentHeader = btoa(
+                JSON.stringify({
+                    network: 'solana',
+                    signature: 'mock-solana-signature',
+                }),
+            )
+
+            mockFetch.mockResolvedValueOnce(
+                new Response(JSON.stringify({ isValid: true, invalidReason: null }), {
+                    status: 200,
+                }),
+            )
+
+            mockFetch.mockResolvedValueOnce(
+                new Response(
+                    JSON.stringify({
+                        success: true,
+                        txHash: '5J7Xz...mockHash',
+                        networkId: 'solana',
+                        error: null,
+                    }),
+                    {
+                        status: 200,
+                    },
+                ),
+            )
+
+            const request = new NextRequest('http://localhost:3000/api/stats', {
+                headers: {
+                    'x-payment': solanaPaymentHeader,
+                },
+            })
+
+            await middleware(request)
+
+            const verifyCall = mockFetch.mock.calls[0]
+            const verifyBody = JSON.parse(verifyCall[1].body as string)
+
+            expect(verifyBody.paymentRequirements.asset).toBe(
+                'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // Solana USDC
+            )
+            expect(verifyBody.paymentRequirements.payTo).toBe(
+                'Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K', // Solana recipient
+            )
+        })
+
+        it('should return Solana transaction hash in X-PAYMENT-RESPONSE', async () => {
+            const solanaPaymentHeader = btoa(
+                JSON.stringify({
+                    network: 'solana',
+                    signature: 'mock-solana-signature',
+                }),
+            )
+
+            const solanaTxHash = '5J7Xz8k3QmV9YnN2KpL4fG8hR6dS7wT3xU2jA1bC9eD4'
+
+            mockFetch.mockResolvedValueOnce(
+                new Response(JSON.stringify({ isValid: true, invalidReason: null }), {
+                    status: 200,
+                }),
+            )
+
+            mockFetch.mockResolvedValueOnce(
+                new Response(
+                    JSON.stringify({
+                        success: true,
+                        txHash: solanaTxHash,
+                        networkId: 'solana',
+                        error: null,
+                    }),
+                    {
+                        status: 200,
+                    },
+                ),
+            )
+
+            const request = new NextRequest('http://localhost:3000/api/stats', {
+                headers: {
+                    'x-payment': solanaPaymentHeader,
+                },
+            })
+
+            const response = await middleware(request)
+
+            const paymentResponseHeader = response.headers.get('X-PAYMENT-RESPONSE')
+            expect(paymentResponseHeader).toBeTruthy()
+
+            if (paymentResponseHeader) {
+                const decoded = JSON.parse(atob(paymentResponseHeader))
+                expect(decoded).toMatchObject({
+                    success: true,
+                    txHash: solanaTxHash,
+                    networkId: 'solana',
+                })
+            }
+        })
+
+        it('should handle Base payment header correctly', async () => {
+            const basePaymentHeader = btoa(
+                JSON.stringify({
+                    network: 'base',
+                    signature: 'mock-base-signature',
+                }),
+            )
+
+            mockFetch.mockResolvedValueOnce(
+                new Response(JSON.stringify({ isValid: true, invalidReason: null }), {
+                    status: 200,
+                }),
+            )
+
+            mockFetch.mockResolvedValueOnce(
+                new Response(
+                    JSON.stringify({
+                        success: true,
+                        txHash: '0xmockBaseHash',
+                        networkId: 'base',
+                        error: null,
+                    }),
+                    {
+                        status: 200,
+                    },
+                ),
+            )
+
+            const request = new NextRequest('http://localhost:3000/api/stats', {
+                headers: {
+                    'x-payment': basePaymentHeader,
+                },
+            })
+
+            await middleware(request)
+
+            const verifyCall = mockFetch.mock.calls[0]
+            const verifyBody = JSON.parse(verifyCall[1].body as string)
+
+            expect(verifyBody.paymentRequirements.network).toBe('base')
+            expect(verifyBody.paymentRequirements.asset).toBe(
+                '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base USDC
+            )
+            expect(verifyBody.paymentRequirements.payTo).toBe(
+                '0xde7ae42f066940c50efeed40fd71dde630148c0a', // Base recipient
+            )
         })
     })
 })

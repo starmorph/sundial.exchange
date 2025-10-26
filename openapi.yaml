@@ -1,0 +1,305 @@
+openapi: 3.1.0
+info:
+  title: Sundial Exchange API
+  version: 1.0.0
+  description: Public API endpoints for Sundial Exchange.
+servers:
+  - url: https://sundial.exchange
+    description: Production
+  - url: http://localhost:3000
+    description: Local development
+  - url: /
+    description: Relative to deployment origin
+tags:
+  - name: dex
+    description: DEX data endpoints
+  - name: stats
+    description: Platform and market stats
+  - name: trending
+    description: Trending token data
+  - name: logging
+    description: Event ingestion/logging
+paths:
+  /api/dex/overview:
+    get:
+      tags: [dex]
+      operationId: getDexOverview
+      summary: Get Solana DEX overview
+      description: Returns Solana DEX protocol summaries and aggregated volume timeline for Solana DEXs.
+      responses:
+        "200":
+          description: Overview data
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [protocols, volumes]
+                properties:
+                  protocols:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DexProtocolSummary"
+                  volumes:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DexVolumeData"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/dex/protocol/{slug}:
+    get:
+      tags: [dex]
+      operationId: getDexProtocolBySlug
+      summary: Get DEX protocol details
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+          description: Protocol slug (e.g. "raydium")
+      responses:
+        "200":
+          description: Protocol details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DexProtocolSummary"
+        "400":
+          description: Missing or invalid slug
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/stats:
+    get:
+      tags: [stats]
+      operationId: getStats
+      summary: Get near real-time platform stats
+      description: Returns TPS, SOL price, TVL, and 24h volume plus 24h change percentages when available.
+      responses:
+        "200":
+          description: Stats payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsResponse"
+
+  /api/trending:
+    get:
+      tags: [trending]
+      operationId: getTrendingTokens
+      summary: Get trending token pricing data
+      parameters:
+        - in: query
+          name: hours
+          required: false
+          description: Lookback window in hours (> 0). Defaults to 24.
+          schema:
+            type: integer
+            minimum: 1
+            default: 24
+      responses:
+        "200":
+          description: Trending token series
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NormalizedTrendingToken"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/swap-log:
+    post:
+      tags: [logging]
+      operationId: postSwapLog
+      summary: Log a swap event
+      description: Accepts arbitrary JSON payloads to be logged server-side. Returns no content.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SwapEventPayload"
+      responses:
+        "204":
+          description: Logged successfully, no content
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    DexVolumeData:
+      type: object
+      required: [date, dailyVolume, totalVolume, breakdown]
+      properties:
+        date:
+          type: number
+          description: Unix timestamp (seconds or ms as provided by upstream)
+        dailyVolume:
+          type: number
+        totalVolume:
+          type: number
+        breakdown:
+          type: object
+          additionalProperties:
+            type: number
+
+    ChainTvls:
+      type: object
+      additionalProperties:
+        type: number
+
+    Breakdown24h:
+      type: object
+      additionalProperties:
+        type: object
+        additionalProperties:
+          type: number
+
+    DexProtocolSummary:
+      type: object
+      properties:
+        name:
+          type: string
+        displayName:
+          type: string
+        disabled:
+          type: boolean
+        logo:
+          type: string
+        address:
+          type: string
+        url:
+          type: string
+        description:
+          type: string
+        audits:
+          type: string
+        category:
+          type: string
+        twitter:
+          type: string
+        audit_links:
+          type: array
+          items:
+            type: string
+        forkedFrom:
+          type: array
+          items:
+            type: string
+        gecko_id:
+          type: string
+        chains:
+          type: array
+          items:
+            type: string
+        module:
+          type: string
+        protocolType:
+          type: string
+        methodology:
+          type: string
+        latestFetchIsOk:
+          type: boolean
+        slug:
+          type: string
+        tvl:
+          type: number
+        chainTvls:
+          $ref: "#/components/schemas/ChainTvls"
+        change_1h:
+          type: number
+        change_1d:
+          type: number
+        change_7d:
+          type: number
+        fdv:
+          type: number
+        mcap:
+          type: number
+        total24h:
+          type: number
+        total48hto24h:
+          type: number
+        total7d:
+          type: number
+        total14dto7d:
+          type: number
+        total60dto30d:
+          type: number
+        total30d:
+          type: number
+        totalAllTime:
+          type: number
+        breakdown24h:
+          $ref: "#/components/schemas/Breakdown24h"
+
+    PriceHistoryPoint:
+      type: object
+      required: [timestamp, price]
+      properties:
+        timestamp:
+          type: number
+        price:
+          type: number
+
+    NormalizedTrendingToken:
+      type: object
+      required: [symbol, currentPrice, change24h, prices]
+      properties:
+        symbol:
+          type: string
+        currentPrice:
+          type: number
+        change24h:
+          type: number
+        prices:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceHistoryPoint"
+
+    StatsResponse:
+      type: object
+      properties:
+        tps:
+          type: [number, "null"]
+        solPriceUsd:
+          type: [number, "null"]
+        tvlUsd:
+          type: [number, "null"]
+        volume24hUsd:
+          type: [number, "null"]
+        solChange24hPct:
+          type: [number, "null"]
+        tvlChange24hPct:
+          type: [number, "null"]
+        volume24hChangePct:
+          type: [number, "null"]
+
+    SwapEventPayload:
+      type: object
+      description: Arbitrary JSON payload to log; shape is not validated server-side.
+      additionalProperties: true

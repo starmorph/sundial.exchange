@@ -618,9 +618,17 @@ describe('x402 Middleware', () => {
             await middleware(request)
 
             const verifyCall = mockFetch.mock.calls[0]
-            const verifyBody = JSON.parse(verifyCall[1].body as string)
+            expect(verifyCall).toBeDefined()
 
-            expect(verifyBody.payment).toBeDefined()
+            const verifyOptions = verifyCall?.[1] as RequestInit | undefined
+            expect(verifyOptions).toBeDefined()
+
+            const verifyBody = verifyOptions?.body
+                ? JSON.parse(verifyOptions.body as string)
+                : undefined
+
+            expect(verifyBody).toBeDefined()
+            expect(verifyBody.paymentPayload).toBeDefined()
             expect(verifyBody.resource).toContain('/api/stats')
         })
     })

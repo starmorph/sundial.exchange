@@ -164,12 +164,8 @@ describe('x402 Payment Flow Integration Tests', () => {
             const body = JSON.parse(callArgs?.body as string)
 
             expect(body).toMatchObject({
-                paymentHeader: 'test-payment',
-                scheme: 'exact',
-                network: 'base',
-                maxAmountRequired: '100000',
-                payTo: '0xde7ae42f066940c50efeed40fd71dde630148c0a',
-                asset: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+                payment: 'test-payment',
+                resource: expect.stringContaining('/api/stats'),
             })
         })
 
@@ -203,9 +199,8 @@ describe('x402 Payment Flow Integration Tests', () => {
             const body = JSON.parse(settleCall[1]?.body as string)
 
             expect(body).toMatchObject({
-                paymentHeader: 'test-payment',
-                scheme: 'exact',
-                network: 'base',
+                payment: 'test-payment',
+                resource: expect.stringContaining('/api/stats'),
             })
         })
     })

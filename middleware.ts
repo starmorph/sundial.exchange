@@ -236,6 +236,15 @@ function create402Response(request: NextRequest): NextResponse {
     return NextResponse.json(challenge, { status: 402 })
 }
 
+function parsePaymentHeader(paymentHeader: string) {
+    try {
+        return JSON.parse(atob(paymentHeader))
+    } catch (error) {
+        console.log("[x402] Failed to parse payment header:", error)
+        return null
+    }
+}
+
 async function verifyPayment(
     paymentHeader: string,
     request: NextRequest,
@@ -248,6 +257,17 @@ async function verifyPayment(
     console.log("[x402] Verifying payment for resource:", resource)
     console.log("[x402] Original request URL:", request.url)
 
+    // Parse the payment header to get the payment proof
+    const paymentProof = parsePaymentHeader(paymentHeader)
+    if (!paymentProof) {
+        return {
+            isValid: false,
+            invalidReason: "Invalid payment header format",
+        }
+    }
+
+    console.log("[x402] Payment proof network:", paymentProof.network)
+
     // Try Base network first
     const networks = [
         { network: "base", payTo: RECIPIENT_ADDRESS, asset: USDC_BASE },
@@ -256,19 +276,24 @@ async function verifyPayment(
 
     for (const { network, payTo, asset } of networks) {
         try {
-            // PayAI facilitator expects the payment header and requirements separately
+            // PayAI facilitator expects the payment proof with payment requirements
             const verifyPayload = {
-                paymentHeader,
-                scheme: "exact",
-                network,
-                maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
-                resource,
-                payTo,
-                asset,
+                x402Version: paymentProof.x402Version || 1,
+                scheme: paymentProof.scheme,
+                network: paymentProof.network,
+                payload: paymentProof.payload,
+                paymentRequirements: {
+                    maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
+                    asset,
+                    payTo,
+                    resource,
+                    description: `Access ${url.pathname} - Sundial Exchange API`,
+                    maxTimeoutSeconds: 300,
+                },
             }
 
             console.log(`[x402] Trying verification with ${network} network...`)
-            console.log(`[x402] Verify payload:`, JSON.stringify(verifyPayload).substring(0, 200))
+            console.log(`[x402] Verify payload:`, JSON.stringify(verifyPayload).substring(0, 300))
 
             const verifyResponse = await fetch(`${FACILITATOR_BASE_URL}/verify`, {
                 method: "POST",
@@ -316,20 +341,36 @@ async function settlePayment(
     const payTo = network === "solana" ? RECIPIENT_ADDRESS_SOLANA : RECIPIENT_ADDRESS
     const asset = network === "solana" ? USDC_SOLANA : USDC_BASE
 
+    // Parse the payment header to get the payment proof
+    const paymentProof = parsePaymentHeader(paymentHeader)
+    if (!paymentProof) {
+        return {
+            success: false,
+            error: "Invalid payment header format",
+            txHash: null,
+            networkId: null,
+        }
+    }
+
     try {
-        // PayAI facilitator expects flat structure
+        // PayAI facilitator expects the same structure for settlement
         const settlePayload = {
-            paymentHeader,
-            scheme: "exact",
-            network,
-            maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
-            resource,
-            payTo,
-            asset,
+            x402Version: paymentProof.x402Version || 1,
+            scheme: paymentProof.scheme,
+            network: paymentProof.network,
+            payload: paymentProof.payload,
+            paymentRequirements: {
+                maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
+                asset,
+                payTo,
+                resource,
+                description: `Access ${url.pathname} - Sundial Exchange API`,
+                maxTimeoutSeconds: 300,
+            },
         }
 
         console.log(`[x402] Settling payment on ${network}...`)
-        console.log(`[x402] Settle payload:`, JSON.stringify(settlePayload).substring(0, 200))
+        console.log(`[x402] Settle payload:`, JSON.stringify(settlePayload).substring(0, 300))
 
         const settleResponse = await fetch(`${FACILITATOR_BASE_URL}/settle`, {
             method: "POST",

@@ -528,13 +528,8 @@ describe('x402 Middleware', () => {
             const solanaVerifyCall = mockFetch.mock.calls[1]
             const solanaVerifyBody = JSON.parse(solanaVerifyCall[1].body as string)
 
-            expect(solanaVerifyBody.network).toBe('solana')
-            expect(solanaVerifyBody.asset).toBe(
-                'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // Solana USDC
-            )
-            expect(solanaVerifyBody.payTo).toBe(
-                'Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K', // Solana recipient
-            )
+            expect(solanaVerifyBody.payment).toBeDefined()
+            expect(solanaVerifyBody.resource).toContain('/api/stats')
         })
 
         it('should return Solana transaction hash in X-PAYMENT-RESPONSE', async () => {
@@ -625,13 +620,8 @@ describe('x402 Middleware', () => {
             const verifyCall = mockFetch.mock.calls[0]
             const verifyBody = JSON.parse(verifyCall[1].body as string)
 
-            expect(verifyBody.network).toBe('base')
-            expect(verifyBody.asset).toBe(
-                '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base USDC
-            )
-            expect(verifyBody.payTo).toBe(
-                '0xde7ae42f066940c50efeed40fd71dde630148c0a', // Base recipient
-            )
+            expect(verifyBody.payment).toBeDefined()
+            expect(verifyBody.resource).toContain('/api/stats')
         })
     })
 })

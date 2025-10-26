@@ -274,14 +274,14 @@ async function verifyPayment(
     const paymentNetwork = paymentProof.network
     const payTo = paymentNetwork === "solana" ? RECIPIENT_ADDRESS_SOLANA : RECIPIENT_ADDRESS
     const asset = paymentNetwork === "solana" ? USDC_SOLANA : USDC_BASE
-    
+
     // Check if authorization recipient matches
     if (paymentProof.payload?.authorization?.to) {
         console.log("[x402] Authorization 'to' address:", paymentProof.payload.authorization.to)
         console.log("[x402] Our 'payTo' address:", payTo)
         console.log("[x402] Match:", paymentProof.payload.authorization.to.toLowerCase() === payTo.toLowerCase())
     }
-    
+
     // Check if authorization value matches our price
     if (paymentProof.payload?.authorization?.value) {
         console.log("[x402] Authorization value:", paymentProof.payload.authorization.value)

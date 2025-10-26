@@ -291,13 +291,18 @@ async function verifyPayment(
     try {
         const verifyPayload = {
             x402Version: paymentProof.x402Version ?? 1,
+            scheme: paymentProof.scheme,
+            network: paymentNetwork,
             paymentHeader,
-            paymentPayload: paymentProof,
+            paymentPayload: paymentProof.payload,
             paymentRequirements: {
+                scheme: paymentProof.scheme,
+                network: paymentNetwork,
                 payTo,
                 asset,
                 resource,
                 maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
+                description: `Access ${url.pathname} - Sundial Exchange API`,
                 maxTimeoutSeconds: 300,
             },
         }
@@ -365,13 +370,18 @@ async function settlePayment(
     try {
         const settlePayload = {
             x402Version: paymentProof.x402Version ?? 1,
+            scheme: paymentProof.scheme,
+            network,
             paymentHeader,
-            paymentPayload: paymentProof,
+            paymentPayload: paymentProof.payload,
             paymentRequirements: {
+                scheme: paymentProof.scheme,
+                network,
                 payTo,
                 asset,
                 resource,
                 maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
+                description: `Access ${url.pathname} - Sundial Exchange API`,
                 maxTimeoutSeconds: 300,
             },
         }

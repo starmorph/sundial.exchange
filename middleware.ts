@@ -256,27 +256,19 @@ async function verifyPayment(
 
     for (const { network, payTo, asset } of networks) {
         try {
+            // PayAI facilitator expects the payment header and requirements separately
             const verifyPayload = {
-                x402Version: 1,
                 paymentHeader,
-                paymentRequirements: {
-                    scheme: "exact",
-                    network,
-                    maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
-                    resource,
-                    description: `Access ${url.pathname} - Sundial Exchange API`,
-                    mimeType: "application/json",
-                    payTo,
-                    maxTimeoutSeconds: 300,
-                    asset,
-                    extra: {
-                        name: "USD Coin",
-                        version: "2",
-                    },
-                },
+                scheme: "exact",
+                network,
+                maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
+                resource,
+                payTo,
+                asset,
             }
 
             console.log(`[x402] Trying verification with ${network} network...`)
+            console.log(`[x402] Verify payload:`, JSON.stringify(verifyPayload).substring(0, 200))
 
             const verifyResponse = await fetch(`${FACILITATOR_BASE_URL}/verify`, {
                 method: "POST",
@@ -325,28 +317,24 @@ async function settlePayment(
     const asset = network === "solana" ? USDC_SOLANA : USDC_BASE
 
     try {
+        // PayAI facilitator expects flat structure
+        const settlePayload = {
+            paymentHeader,
+            scheme: "exact",
+            network,
+            maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
+            resource,
+            payTo,
+            asset,
+        }
+
+        console.log(`[x402] Settling payment on ${network}...`)
+        console.log(`[x402] Settle payload:`, JSON.stringify(settlePayload).substring(0, 200))
+
         const settleResponse = await fetch(`${FACILITATOR_BASE_URL}/settle`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                x402Version: 1,
-                paymentHeader,
-                paymentRequirements: {
-                    scheme: "exact",
-                    network,
-                    maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
-                    resource,
-                    description: `Access ${url.pathname} - Sundial Exchange API`,
-                    mimeType: "application/json",
-                    payTo,
-                    maxTimeoutSeconds: 300,
-                    asset,
-                    extra: {
-                        name: "USD Coin",
-                        version: "2",
-                    },
-                },
-            }),
+            body: JSON.stringify(settlePayload),
         })
 
         if (!settleResponse.ok) {

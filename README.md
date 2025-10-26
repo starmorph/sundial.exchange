@@ -149,6 +149,24 @@ External API requests require a $0.10 USDC payment to access endpoints. The `mid
 
 **Production ready:** Already configured for Base mainnet!
 
+### API Documentation
+
+The complete API specification is available in `openapi.yaml` at the project root. This OpenAPI 3.1 spec documents:
+- All API endpoints with request/response schemas
+- x402 payment flow (HTTP 402 responses)
+- Authentication requirements
+- Error responses
+
+View the spec in tools like:
+- [Swagger Editor](https://editor.swagger.io/)
+- [Redoc](https://redocly.github.io/redoc/)
+- [Stoplight](https://stoplight.io/)
+
+Or serve it locally with:
+```bash
+npx @redocly/cli preview-docs openapi.yaml
+```
+
 ## Deployment
 
 This project is optimized for deployment on Vercel:

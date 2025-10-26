@@ -176,45 +176,90 @@ components:
     X402Challenge:
       type: object
       description: x402 payment challenge containing payment requirements
-      required: [scheme, amountUsdCents, network, to, description, resource]
+      required: [x402Version, error, accepts]
+      properties:
+        x402Version:
+          type: integer
+          enum: [1]
+          description: Version of x402 protocol
+        error:
+          type: string
+          example: "X-PAYMENT header is required"
+          description: Error message indicating payment is required
+        accepts:
+          type: array
+          description: Array of accepted payment methods
+          items:
+            $ref: "#/components/schemas/X402PaymentMethod"
+
+    X402PaymentMethod:
+      type: object
+      description: Details of an accepted payment method
+      required: [scheme, network, maxAmountRequired, resource, payTo, asset]
       properties:
         scheme:
           type: string
-          enum: ["x402"]
-          description: Payment scheme identifier
-        amountUsdCents:
-          type: integer
-          example: 10
-          description: Payment amount in USD cents
+          enum: ["exact"]
+          description: Payment scheme type
         network:
           type: string
-          enum: ["base", "base-sepolia"]
+          enum: ["base"]
           description: Blockchain network for payment
-        to:
+        maxAmountRequired:
           type: string
-          pattern: "^0x[a-fA-F0-9]{40}$"
-          example: "0xde7ae42f066940c50efeed40fd71dde630148c0a"
-          description: Recipient Ethereum address
-        description:
-          type: string
-          example: "Payment required to access Sundial API"
-          description: Human-readable payment description
+          example: "100000"
+          description: Maximum payment amount in token smallest unit (USDC has 6 decimals, so 100000 = 0.10 USDC)
         resource:
           type: string
-          example: "/api/stats"
-          description: Resource path being accessed
-        nonce:
+          example: "http://localhost:3000/api/stats"
+          description: Full URL of the resource being accessed
+        description:
           type: string
-          description: Unique identifier for replay protection
-        expiresAt:
+          description: Human-readable payment description
+        mimeType:
           type: string
-          format: date-time
-          description: ISO 8601 timestamp when payment challenge expires
-        facilitatorVerifyUrl:
+          example: "application/json"
+          description: MIME type of the resource
+        payTo:
           type: string
-          format: uri
-          example: "https://x402.org/facilitator"
-          description: URL for payment verification
+          pattern: "^0x[a-fA-F0-9]{40}$"
+          example: "0xDE7Ae42F066940c50EfeEd40Fd71DdE630148C0a"
+          description: Recipient Ethereum address
+        maxTimeoutSeconds:
+          type: integer
+          example: 300
+          description: Maximum time in seconds to complete payment
+        asset:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+          example: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+          description: Token contract address (USDC on Base)
+        outputSchema:
+          type: object
+          description: Schema describing the output format
+          properties:
+            input:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: "http"
+                method:
+                  type: string
+                  example: "GET"
+                discoverable:
+                  type: boolean
+                  example: true
+        extra:
+          type: object
+          description: Additional metadata
+          properties:
+            name:
+              type: string
+              example: "USD Coin"
+            version:
+              type: string
+              example: "2"
 
     ErrorResponse:
       type: object

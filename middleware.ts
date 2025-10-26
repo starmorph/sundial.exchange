@@ -287,6 +287,7 @@ async function verifyPayment(
     }
 
     try {
+        const description = `Access ${url.pathname} - Sundial Exchange API (${paymentNetwork === "solana" ? "Solana" : "Base"})`
         const verifyPayload = {
             x402Version: paymentProof.x402Version ?? 1,
             scheme: paymentProof.scheme,
@@ -300,8 +301,13 @@ async function verifyPayment(
                 asset,
                 resource,
                 maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
-                description: `Access ${url.pathname} - Sundial Exchange API`,
+                description,
                 maxTimeoutSeconds: 300,
+                mimeType: "application/json",
+                extra: {
+                    name: "USD Coin",
+                    version: "2",
+                },
             },
         }
 
@@ -365,6 +371,7 @@ async function settlePayment(
     }
 
     try {
+        const description = `Access ${url.pathname} - Sundial Exchange API (${network === "solana" ? "Solana" : "Base"})`
         const settlePayload = {
             x402Version: paymentProof.x402Version ?? 1,
             scheme: paymentProof.scheme,
@@ -378,8 +385,13 @@ async function settlePayment(
                 asset,
                 resource,
                 maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
-                description: `Access ${url.pathname} - Sundial Exchange API`,
+                description,
                 maxTimeoutSeconds: 300,
+                mimeType: "application/json",
+                extra: {
+                    name: "USD Coin",
+                    version: "2",
+                },
             },
         }
 

@@ -1,25 +1,54 @@
 openapi: 3.1.0
 info:
   title: Sundial Exchange API
-  version: 1.0.0
+  version: 1.1.0
   description: |
-    Public API endpoints for Sundial Exchange.
+    Real-time Solana DEX analytics API powered by x402 payments.
 
-    ## Payment Gateway
+    ## Overview
 
-    External API requests require a $0.10 USDC payment via the x402 protocol.
+    Access comprehensive Solana DEX data including:
+    - 📊 Real-time statistics (TPS, SOL price, TVL)
+    - 🔥 Trending tokens with 24h price changes
+    - 🏦 Protocol summaries and volumes (Raydium, Orca, Meteora, etc.)
+    - 📈 Historical volume data across all major Solana DEXs
+
+    ### disclaimer: this api is not yet production ready and is subject to change. There may be data inaccuracies or missing data e.g. retrieving 7day volume from a specific dex may not be available.
+
+    ## Payment Gateway (x402 Protocol)
+
+    External API requests require a **$0.10 USDC** payment via the [x402 protocol](https://docs.cdp.coinbase.com/x402/core-concepts/how-it-works).
+
+    ### Supported Networks
+
     Clients can choose to pay on either:
-    - **Base** (Ethereum L2)
-    - **Solana**
+    - **Base** (Ethereum L2) - USDC contract: `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
+    - **Solana** - USDC contract: `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`
 
-    Payments are processed through the [PayAI facilitator](https://facilitator.payai.network/) with zero gas fees.
+    Payments are processed through the [PayAI facilitator](https://facilitator.payai.network/) with **zero gas fees** for both buyers and merchants.
 
-    ### Exemptions
+    ### Payment Recipients
+
+    - **Base**: `0xde7ae42f066940c50efeed40fd71dde630148c0a`
+    - **Solana**: `Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K`
+
+    ### Free Access
 
     The following origins are exempt from payment requirements:
     - `http://localhost:3000` (development)
     - `https://sundial.exchange` (production)
     - `https://www.sundial.exchange` (production with www)
+
+    Users browsing the Sundial Exchange website get free API access!
+  contact:
+    name: Sundial Exchange
+    url: https://sundial.exchange
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+externalDocs:
+  description: Complete API documentation and guides
+  url: https://github.com/dylanboudro/sundial.exchange
 servers:
   - url: https://sundial.exchange
     description: Production
@@ -202,14 +231,33 @@ components:
                 maxTimeoutSeconds: 300
                 asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
                 outputSchema:
-                  type: "object"
-                  properties:
-                    tps:
-                      type: ["number", "null"]
-                      description: "Transactions per second"
-                    solPriceUsd:
-                      type: ["number", "null"]
-                      description: "SOL price in USD"
+                  input:
+                    type: "http"
+                    method: "GET"
+                  output:
+                    type: "object"
+                    properties:
+                      tps:
+                        type: "number"
+                        description: "Transactions per second"
+                      solPriceUsd:
+                        type: "number"
+                        description: "SOL price in USD"
+                      tvlUsd:
+                        type: "number"
+                        description: "Total value locked in USD"
+                      volume24hUsd:
+                        type: "number"
+                        description: "24h volume in USD"
+                      solChange24hPct:
+                        type: "number"
+                        description: "24h SOL price change %"
+                      tvlChange24hPct:
+                        type: "number"
+                        description: "24h TVL change %"
+                      volume24hChangePct:
+                        type: "number"
+                        description: "24h volume change %"
                 extra:
                   name: "USD Coin"
                   version: "2"
@@ -223,14 +271,33 @@ components:
                 maxTimeoutSeconds: 300
                 asset: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
                 outputSchema:
-                  type: "object"
-                  properties:
-                    tps:
-                      type: ["number", "null"]
-                      description: "Transactions per second"
-                    solPriceUsd:
-                      type: ["number", "null"]
-                      description: "SOL price in USD"
+                  input:
+                    type: "http"
+                    method: "GET"
+                  output:
+                    type: "object"
+                    properties:
+                      tps:
+                        type: "number"
+                        description: "Transactions per second"
+                      solPriceUsd:
+                        type: "number"
+                        description: "SOL price in USD"
+                      tvlUsd:
+                        type: "number"
+                        description: "Total value locked in USD"
+                      volume24hUsd:
+                        type: "number"
+                        description: "24h volume in USD"
+                      solChange24hPct:
+                        type: "number"
+                        description: "24h SOL price change %"
+                      tvlChange24hPct:
+                        type: "number"
+                        description: "24h TVL change %"
+                      volume24hChangePct:
+                        type: "number"
+                        description: "24h volume change %"
                 extra:
                   name: "USD Coin"
                   version: "2"
@@ -316,20 +383,89 @@ components:
           description: USDC token contract address (format depends on network)
         outputSchema:
           type: object
-          description: Schema describing the output format
+          description: |
+            Schema describing the input and output format per x402scan specification.
+            Allows x402scan to present a UI for invoking resources from within the app.
           properties:
             input:
               type: object
+              description: HTTP request parameters
+              required: [type, method]
               properties:
                 type:
                   type: string
-                  example: "http"
+                  enum: ["http"]
+                  description: Request type
                 method:
                   type: string
-                  example: "GET"
-                discoverable:
-                  type: boolean
-                  example: true
+                  enum: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+                  description: HTTP method
+                bodyType:
+                  type: string
+                  enum:
+                    [
+                      "json",
+                      "form-data",
+                      "multipart-form-data",
+                      "text",
+                      "binary",
+                    ]
+                  description: Body content type (for POST/PUT/PATCH)
+                queryParams:
+                  type: object
+                  description: Query parameter definitions
+                  additionalProperties:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        description: Parameter type
+                      required:
+                        oneOf:
+                          - type: boolean
+                          - type: array
+                            items:
+                              type: string
+                        description: Whether parameter is required
+                      description:
+                        type: string
+                        description: Parameter description
+                      enum:
+                        type: array
+                        items:
+                          type: string
+                        description: Allowed values
+                bodyFields:
+                  type: object
+                  description: Body field definitions (for POST/PUT/PATCH)
+                  additionalProperties:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        description: Field type
+                      required:
+                        oneOf:
+                          - type: boolean
+                          - type: array
+                            items:
+                              type: string
+                        description: Whether field is required
+                      description:
+                        type: string
+                        description: Field description
+                      properties:
+                        type: object
+                        description: Nested object properties
+                headerFields:
+                  type: object
+                  description: Custom header field definitions
+                  additionalProperties:
+                    type: object
+            output:
+              type: object
+              description: Response structure definition
+              additionalProperties: true
         extra:
           type: object
           description: Additional metadata

@@ -118,17 +118,29 @@ describe('x402 Middleware', () => {
             expect(body.accepts).toHaveLength(2)
         })
 
-        it('should include proper outputSchema for /api/stats', async () => {
+        it('should include proper outputSchema for /api/stats (x402scan compatible)', async () => {
             const request = new NextRequest('http://localhost:3000/api/stats')
 
             const response = await middleware(request)
             const body = await response.json()
 
             const outputSchema = body.accepts[0].outputSchema
-            expect(outputSchema).toHaveProperty('type', 'object')
-            expect(outputSchema.properties).toHaveProperty('tps')
-            expect(outputSchema.properties).toHaveProperty('solPriceUsd')
-            expect(outputSchema.properties).toHaveProperty('tvlUsd')
+
+            // Should have input and output fields per x402scan spec
+            expect(outputSchema).toHaveProperty('input')
+            expect(outputSchema).toHaveProperty('output')
+
+            // Input should specify HTTP method
+            expect(outputSchema.input).toMatchObject({
+                type: 'http',
+                method: 'GET',
+            })
+
+            // Output should describe response structure
+            expect(outputSchema.output).toHaveProperty('type', 'object')
+            expect(outputSchema.output.properties).toHaveProperty('tps')
+            expect(outputSchema.output.properties).toHaveProperty('solPriceUsd')
+            expect(outputSchema.output.properties).toHaveProperty('tvlUsd')
         })
 
         it('should include description in challenge for both networks', async () => {
@@ -426,20 +438,24 @@ describe('x402 Middleware', () => {
     })
 
     describe('Solana Network Support', () => {
-        it('should accept Solana payment header', async () => {
-            const solanaPaymentHeader = btoa(
-                JSON.stringify({
-                    network: 'solana',
-                    signature: 'mock-solana-signature',
+        it('should accept Solana payment header and try both networks', async () => {
+            const solanaPaymentHeader = 'mock-solana-payment-header'
+
+            // First attempt with Base (fails)
+            mockFetch.mockResolvedValueOnce(
+                new Response(JSON.stringify({ isValid: false, invalidReason: 'Wrong network' }), {
+                    status: 200,
                 }),
             )
 
+            // Second attempt with Solana (succeeds)
             mockFetch.mockResolvedValueOnce(
                 new Response(JSON.stringify({ isValid: true, invalidReason: null }), {
                     status: 200,
                 }),
             )
 
+            // Settlement
             mockFetch.mockResolvedValueOnce(
                 new Response(
                     JSON.stringify({
@@ -463,29 +479,28 @@ describe('x402 Middleware', () => {
             const response = await middleware(request)
 
             expect(response.status).toBe(200)
-            expect(mockFetch).toHaveBeenCalledWith(
-                'https://facilitator.payai.network/verify',
-                expect.objectContaining({
-                    method: 'POST',
-                    body: expect.stringContaining('"network":"solana"'),
-                }),
-            )
+            // Should have tried Base, then Solana, then settle
+            expect(mockFetch).toHaveBeenCalledTimes(3)
         })
 
-        it('should use correct Solana USDC contract', async () => {
-            const solanaPaymentHeader = btoa(
-                JSON.stringify({
-                    network: 'solana',
-                    signature: 'mock-solana-signature',
+        it('should use correct Solana USDC contract when Solana network succeeds', async () => {
+            const solanaPaymentHeader = 'mock-solana-payment'
+
+            // Base verification fails
+            mockFetch.mockResolvedValueOnce(
+                new Response(JSON.stringify({ isValid: false, invalidReason: 'Wrong network' }), {
+                    status: 200,
                 }),
             )
 
+            // Solana verification succeeds
             mockFetch.mockResolvedValueOnce(
                 new Response(JSON.stringify({ isValid: true, invalidReason: null }), {
                     status: 200,
                 }),
             )
 
+            // Settlement
             mockFetch.mockResolvedValueOnce(
                 new Response(
                     JSON.stringify({
@@ -508,33 +523,38 @@ describe('x402 Middleware', () => {
 
             await middleware(request)
 
-            const verifyCall = mockFetch.mock.calls[0]
-            const verifyBody = JSON.parse(verifyCall[1].body as string)
+            // Check the second verify call (Solana)
+            const solanaVerifyCall = mockFetch.mock.calls[1]
+            const solanaVerifyBody = JSON.parse(solanaVerifyCall[1].body as string)
 
-            expect(verifyBody.paymentRequirements.asset).toBe(
+            expect(solanaVerifyBody.paymentRequirements.network).toBe('solana')
+            expect(solanaVerifyBody.paymentRequirements.asset).toBe(
                 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // Solana USDC
             )
-            expect(verifyBody.paymentRequirements.payTo).toBe(
+            expect(solanaVerifyBody.paymentRequirements.payTo).toBe(
                 'Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K', // Solana recipient
             )
         })
 
         it('should return Solana transaction hash in X-PAYMENT-RESPONSE', async () => {
-            const solanaPaymentHeader = btoa(
-                JSON.stringify({
-                    network: 'solana',
-                    signature: 'mock-solana-signature',
+            const solanaPaymentHeader = 'mock-solana-payment'
+            const solanaTxHash = '5J7Xz8k3QmV9YnN2KpL4fG8hR6dS7wT3xU2jA1bC9eD4'
+
+            // Base fails
+            mockFetch.mockResolvedValueOnce(
+                new Response(JSON.stringify({ isValid: false, invalidReason: 'Wrong network' }), {
+                    status: 200,
                 }),
             )
 
-            const solanaTxHash = '5J7Xz8k3QmV9YnN2KpL4fG8hR6dS7wT3xU2jA1bC9eD4'
-
+            // Solana succeeds
             mockFetch.mockResolvedValueOnce(
                 new Response(JSON.stringify({ isValid: true, invalidReason: null }), {
                     status: 200,
                 }),
             )
 
+            // Settlement
             mockFetch.mockResolvedValueOnce(
                 new Response(
                     JSON.stringify({
@@ -571,12 +591,7 @@ describe('x402 Middleware', () => {
         })
 
         it('should handle Base payment header correctly', async () => {
-            const basePaymentHeader = btoa(
-                JSON.stringify({
-                    network: 'base',
-                    signature: 'mock-base-signature',
-                }),
-            )
+            const basePaymentHeader = 'mock-base-payment'
 
             mockFetch.mockResolvedValueOnce(
                 new Response(JSON.stringify({ isValid: true, invalidReason: null }), {

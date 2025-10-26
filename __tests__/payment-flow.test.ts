@@ -72,7 +72,18 @@ describe('x402 Payment Flow Integration Tests', () => {
         })
 
         it('should reject payment with invalid verification', async () => {
-            // Mock facilitator verification (failure)
+            // Mock facilitator verification (failure) for Base
+            mockFetch.mockResolvedValueOnce(
+                new Response(
+                    JSON.stringify({
+                        isValid: false,
+                        invalidReason: 'Invalid payment signature',
+                    }),
+                    { status: 200 },
+                ),
+            )
+
+            // Mock facilitator verification (failure) for Solana
             mockFetch.mockResolvedValueOnce(
                 new Response(
                     JSON.stringify({
@@ -92,7 +103,7 @@ describe('x402 Payment Flow Integration Tests', () => {
             const response = await middleware(request)
 
             expect(response.status).toBe(402)
-            expect(mockFetch).toHaveBeenCalledTimes(1) // Only verification, no settlement
+            expect(mockFetch).toHaveBeenCalledTimes(2) // Tried both networks, no settlement
         })
 
         it('should handle facilitator timeout gracefully', async () => {

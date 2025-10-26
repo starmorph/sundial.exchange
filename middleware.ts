@@ -49,46 +49,138 @@ function isExemptOrigin(request: NextRequest): boolean {
     return false
 }
 
-function getOutputSchema(pathname: string) {
-    // Return proper output schema based on endpoint for better API discovery
-    const schemas: Record<string, object> = {
+function getOutputSchema(pathname: string, method: string) {
+    // Return proper output schema based on endpoint for x402scan compatibility
+    const schemas: Record<string, any> = {
         "/api/stats": {
-            type: "object",
-            properties: {
-                tps: { type: ["number", "null"], description: "Transactions per second" },
-                solPriceUsd: { type: ["number", "null"], description: "SOL price in USD" },
-                tvlUsd: { type: ["number", "null"], description: "Total value locked in USD" },
-                volume24hUsd: { type: ["number", "null"], description: "24h volume in USD" },
-                solChange24hPct: { type: ["number", "null"], description: "24h SOL price change %" },
-                tvlChange24hPct: { type: ["number", "null"], description: "24h TVL change %" },
-                volume24hChangePct: { type: ["number", "null"], description: "24h volume change %" },
+            input: {
+                type: "http",
+                method: "GET",
+            },
+            output: {
+                type: "object",
+                properties: {
+                    tps: { type: "number", description: "Transactions per second" },
+                    solPriceUsd: { type: "number", description: "SOL price in USD" },
+                    tvlUsd: { type: "number", description: "Total value locked in USD" },
+                    volume24hUsd: { type: "number", description: "24h volume in USD" },
+                    solChange24hPct: { type: "number", description: "24h SOL price change %" },
+                    tvlChange24hPct: { type: "number", description: "24h TVL change %" },
+                    volume24hChangePct: { type: "number", description: "24h volume change %" },
+                },
             },
         },
         "/api/trending": {
-            type: "array",
-            items: {
-                type: "object",
-                properties: {
-                    symbol: { type: "string" },
-                    currentPrice: { type: "number" },
-                    change24h: { type: "number" },
-                    prices: { type: "array" },
+            input: {
+                type: "http",
+                method: "GET",
+                queryParams: {
+                    hours: {
+                        type: "number",
+                        required: false,
+                        description: "Number of hours to look back (default: 24)",
+                    },
+                },
+            },
+            output: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        symbol: { type: "string", description: "Token symbol" },
+                        currentPrice: { type: "number", description: "Current price in USD" },
+                        change24h: { type: "number", description: "24h price change percentage" },
+                        prices: {
+                            type: "array",
+                            description: "Historical price data points",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    timestamp: { type: "number" },
+                                    price: { type: "number" },
+                                },
+                            },
+                        },
+                    },
                 },
             },
         },
         "/api/dex/overview": {
-            type: "object",
-            properties: {
-                protocols: { type: "array" },
-                volumes: { type: "array" },
+            input: {
+                type: "http",
+                method: "GET",
+            },
+            output: {
+                type: "object",
+                properties: {
+                    protocols: {
+                        type: "array",
+                        description: "DEX protocol summaries",
+                    },
+                    volumes: {
+                        type: "array",
+                        description: "Aggregated volume timeline",
+                    },
+                },
+            },
+        },
+        "/api/dex/protocol": {
+            input: {
+                type: "http",
+                method: "GET",
+            },
+            output: {
+                type: "object",
+                properties: {
+                    summary: {
+                        type: "object",
+                        description: "Protocol summary statistics",
+                    },
+                    volumes: {
+                        type: "array",
+                        description: "Historical volume data",
+                    },
+                },
+            },
+        },
+        "/api/swap-log": {
+            input: {
+                type: "http",
+                method: "POST",
+                bodyType: "json",
+                bodyFields: {
+                    event: {
+                        type: "object",
+                        required: true,
+                        description: "Swap event payload",
+                    },
+                },
+            },
+            output: {
+                type: "object",
+                properties: {
+                    success: { type: "boolean" },
+                },
             },
         },
     }
 
+    // Match endpoint (handle dynamic routes like /api/dex/protocol/{slug})
+    let schema = schemas[pathname]
+    if (!schema && pathname.startsWith("/api/dex/protocol/")) {
+        schema = schemas["/api/dex/protocol"]
+    }
+
     return (
-        schemas[pathname] || {
-            type: "object",
-            description: "API response data",
+        schema || {
+            input: {
+                type: "http",
+                method: method as any,
+            },
+            output: {
+                type: "object",
+                description: "API response data",
+            },
         }
     )
 }
@@ -96,6 +188,7 @@ function getOutputSchema(pathname: string) {
 function create402Response(request: NextRequest): NextResponse {
     const url = new URL(request.url)
     const resource = `${url.origin}${url.pathname}${url.search}`
+    const method = request.method
 
     const challenge = {
         x402Version: 1,
@@ -112,7 +205,7 @@ function create402Response(request: NextRequest): NextResponse {
                 payTo: RECIPIENT_ADDRESS,
                 maxTimeoutSeconds: 300,
                 asset: USDC_BASE,
-                outputSchema: getOutputSchema(url.pathname),
+                outputSchema: getOutputSchema(url.pathname, method),
                 extra: {
                     name: "USD Coin",
                     version: "2",
@@ -129,7 +222,7 @@ function create402Response(request: NextRequest): NextResponse {
                 payTo: RECIPIENT_ADDRESS_SOLANA,
                 maxTimeoutSeconds: 300,
                 asset: USDC_SOLANA,
-                outputSchema: getOutputSchema(url.pathname),
+                outputSchema: getOutputSchema(url.pathname, method),
                 extra: {
                     name: "USD Coin",
                     version: "2",
@@ -141,95 +234,75 @@ function create402Response(request: NextRequest): NextResponse {
     return NextResponse.json(challenge, { status: 402 })
 }
 
-function getPaymentNetwork(paymentHeader: string): { network: string; payTo: string; asset: string } | null {
-    try {
-        // Payment header is base64 encoded JSON
-        const decoded = JSON.parse(atob(paymentHeader))
-        const network = decoded.network
-
-        if (network === "base") {
-            return { network: "base", payTo: RECIPIENT_ADDRESS, asset: USDC_BASE }
-        } else if (network === "solana") {
-            return { network: "solana", payTo: RECIPIENT_ADDRESS_SOLANA, asset: USDC_SOLANA }
-        }
-        return null
-    } catch {
-        // If we can't parse, try both networks (facilitator will validate)
-        return { network: "base", payTo: RECIPIENT_ADDRESS, asset: USDC_BASE }
-    }
-}
-
 async function verifyPayment(
     paymentHeader: string,
     request: NextRequest,
-): Promise<VerificationResponse> {
-    try {
-        const url = new URL(request.url)
-        const resource = `${url.origin}${url.pathname}${url.search}`
+): Promise<VerificationResponse & { network?: string }> {
+    const url = new URL(request.url)
+    const resource = `${url.origin}${url.pathname}${url.search}`
 
-        // Extract network info from payment header
-        const networkInfo = getPaymentNetwork(paymentHeader)
-        if (!networkInfo) {
-            return { isValid: false, invalidReason: "Unsupported network" }
-        }
+    // Try Base network first
+    const networks = [
+        { network: "base", payTo: RECIPIENT_ADDRESS, asset: USDC_BASE },
+        { network: "solana", payTo: RECIPIENT_ADDRESS_SOLANA, asset: USDC_SOLANA },
+    ]
 
-        const verifyResponse = await fetch(`${FACILITATOR_BASE_URL}/verify`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                x402Version: 1,
-                paymentHeader,
-                paymentRequirements: {
-                    scheme: "exact",
-                    network: networkInfo.network,
-                    maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
-                    resource,
-                    description: `Access ${url.pathname} - Sundial Exchange API`,
-                    mimeType: "application/json",
-                    payTo: networkInfo.payTo,
-                    maxTimeoutSeconds: 300,
-                    asset: networkInfo.asset,
-                    extra: {
-                        name: "USD Coin",
-                        version: "2",
+    for (const { network, payTo, asset } of networks) {
+        try {
+            const verifyResponse = await fetch(`${FACILITATOR_BASE_URL}/verify`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    x402Version: 1,
+                    paymentHeader,
+                    paymentRequirements: {
+                        scheme: "exact",
+                        network,
+                        maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
+                        resource,
+                        description: `Access ${url.pathname} - Sundial Exchange API`,
+                        mimeType: "application/json",
+                        payTo,
+                        maxTimeoutSeconds: 300,
+                        asset,
+                        extra: {
+                            name: "USD Coin",
+                            version: "2",
+                        },
                     },
-                },
-            }),
-        })
+                }),
+            })
 
-        if (!verifyResponse.ok) {
-            return { isValid: false, invalidReason: "Verification request failed" }
+            if (verifyResponse.ok) {
+                const result = (await verifyResponse.json()) as VerificationResponse
+                if (result.isValid) {
+                    return { ...result, network }
+                }
+            }
+        } catch (error) {
+            // Continue to next network
+            continue
         }
+    }
 
-        const result = (await verifyResponse.json()) as VerificationResponse
-        return result
-    } catch (error) {
-        return {
-            isValid: false,
-            invalidReason: error instanceof Error ? error.message : "Unknown error",
-        }
+    return {
+        isValid: false,
+        invalidReason: "Payment verification failed for all networks",
     }
 }
 
 async function settlePayment(
     paymentHeader: string,
     request: NextRequest,
+    network: string,
 ): Promise<SettlementResponse> {
+    const url = new URL(request.url)
+    const resource = `${url.origin}${url.pathname}${url.search}`
+
+    const payTo = network === "solana" ? RECIPIENT_ADDRESS_SOLANA : RECIPIENT_ADDRESS
+    const asset = network === "solana" ? USDC_SOLANA : USDC_BASE
+
     try {
-        const url = new URL(request.url)
-        const resource = `${url.origin}${url.pathname}${url.search}`
-
-        // Extract network info from payment header
-        const networkInfo = getPaymentNetwork(paymentHeader)
-        if (!networkInfo) {
-            return {
-                success: false,
-                error: "Unsupported network",
-                txHash: null,
-                networkId: null,
-            }
-        }
-
         const settleResponse = await fetch(`${FACILITATOR_BASE_URL}/settle`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -238,14 +311,14 @@ async function settlePayment(
                 paymentHeader,
                 paymentRequirements: {
                     scheme: "exact",
-                    network: networkInfo.network,
+                    network,
                     maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
                     resource,
                     description: `Access ${url.pathname} - Sundial Exchange API`,
                     mimeType: "application/json",
-                    payTo: networkInfo.payTo,
+                    payTo,
                     maxTimeoutSeconds: 300,
-                    asset: networkInfo.asset,
+                    asset,
                     extra: {
                         name: "USD Coin",
                         version: "2",
@@ -284,12 +357,12 @@ export async function middleware(request: NextRequest) {
     // Check for payment header
     const paymentHeader = request.headers.get("x-payment")
     if (paymentHeader) {
-        // Verify payment with facilitator
+        // Verify payment with facilitator (tries both networks)
         const verification = await verifyPayment(paymentHeader, request)
 
-        if (verification.isValid) {
-            // Settle payment and get transaction details
-            const settlement = await settlePayment(paymentHeader, request)
+        if (verification.isValid && verification.network) {
+            // Settle payment with the verified network
+            const settlement = await settlePayment(paymentHeader, request, verification.network)
 
             // Continue to the API route
             const response = NextResponse.next()
@@ -299,7 +372,7 @@ export async function middleware(request: NextRequest) {
                 const paymentResponse = {
                     success: true,
                     txHash: settlement.txHash,
-                    networkId: settlement.networkId || "base",
+                    networkId: settlement.networkId || verification.network,
                     timestamp: new Date().toISOString(),
                 }
                 response.headers.set("X-PAYMENT-RESPONSE", btoa(JSON.stringify(paymentResponse)))

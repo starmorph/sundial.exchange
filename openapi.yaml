@@ -225,55 +225,189 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/X402Challenge"
-          example:
-            x402Version: 1
-            error: "X-PAYMENT header is required"
-            accepts:
-              - scheme: "exact"
-                network: "base"
-                maxAmountRequired: "100000"
-                resource: "https://www.sundial.exchange/api/stats"
-                description: "Access /api/stats - Sundial Exchange API (Base)"
-                mimeType: "application/json"
-                payTo: "0xde7ae42f066940c50efeed40fd71dde630148c0a"
-                maxTimeoutSeconds: 300
-                asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-                outputSchema:
-                  input:
-                    type: "http"
-                    method: "GET"
-                  output:
-                    type: "object"
-                    properties:
-                      tps:
-                        type: "number"
-                        description: "Transactions per second"
-                      solPriceUsd:
-                        type: "number"
-                        description: "SOL price in USD"
-                      tvlUsd:
-                        type: "number"
-                        description: "Total value locked in USD"
-                      volume24hUsd:
-                        type: "number"
-                        description: "24h volume in USD"
-                      solChange24hPct:
-                        type: "number"
-                        description: "24h SOL price change %"
-                      tvlChange24hPct:
-                        type: "number"
-                        description: "24h TVL change %"
-                      volume24hChangePct:
-                        type: "number"
-                        description: "24h volume change %"
-                extra:
-                  name: "USD Coin"
-                  version: "2"
+          examples:
+            base:
+              summary: Base mainnet challenge
+              value:
+                x402Version: 1
+                error: "X-PAYMENT header is required"
+                accepts:
+                  - scheme: "exact"
+                    network: "base"
+                    maxAmountRequired: "100000"
+                    resource: "https://www.sundial.exchange/api/stats"
+                    description: "Access /api/stats - Sundial Exchange API (Base)"
+                    mimeType: "application/json"
+                    payTo: "0xde7ae42f066940c50efeed40fd71dde630148c0a"
+                    maxTimeoutSeconds: 300
+                    asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                    outputSchema:
+                      input:
+                        type: "http"
+                        method: "GET"
+                      output:
+                        type: "object"
+                        properties:
+                          tps:
+                            type: "number"
+                            description: "Transactions per second"
+                          solPriceUsd:
+                            type: "number"
+                            description: "SOL price in USD"
+                          tvlUsd:
+                            type: "number"
+                            description: "Total value locked in USD"
+                          volume24hUsd:
+                            type: "number"
+                            description: "24h volume in USD"
+                          solChange24hPct:
+                            type: "number"
+                            description: "24h SOL price change %"
+                          tvlChange24hPct:
+                            type: "number"
+                            description: "24h TVL change %"
+                          volume24hChangePct:
+                            type: "number"
+                            description: "24h volume change %"
+                    extra:
+                      name: "USD Coin"
+                      version: "2"
+                  - scheme: "exact"
+                    network: "solana"
+                    maxAmountRequired: "100000"
+                    resource: "https://www.sundial.exchange/api/stats"
+                    description: "Access /api/stats - Sundial Exchange API (Solana)"
+                    mimeType: "application/json"
+                    payTo: "Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K"
+                    maxTimeoutSeconds: 300
+                    asset: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+                    outputSchema:
+                      input:
+                        type: "http"
+                        method: "GET"
+                      output:
+                        type: "object"
+                        properties:
+                          tps:
+                            type: "number"
+                            description: "Transactions per second"
+                          solPriceUsd:
+                            type: "number"
+                            description: "SOL price in USD"
+                          tvlUsd:
+                            type: "number"
+                            description: "Total value locked in USD"
+                          volume24hUsd:
+                            type: "number"
+                            description: "24h volume in USD"
+                          solChange24hPct:
+                            type: "number"
+                            description: "24h SOL price change %"
+                          tvlChange24hPct:
+                            type: "number"
+                            description: "24h TVL change %"
+                          volume24hChangePct:
+                            type: "number"
+                            description: "24h volume change %"
+                    extra:
+                      name: "USD Coin"
+                      version: "2"
         headers:
           X-PAYMENT-RESPONSE:
             description: Base64-encoded JSON settlement details returned after successful payment verification.
             schema:
               type: string
+            examples:
+              success:
+                summary: Successful settlement
+                value: "eyJzdWNjZXNzIjp0cnVlLCJ0eEhhc2giOiIweGFhYSIsIm5ldHdvcmtJZCI6ImJhc2UiLCJ0aW1lc3RhbXAiOiIyMDI1LTEwLTI2VDA2OjAwOjAwWiJ9"
+        examples:
+          base:
+            summary: Base mainnet challenge
+            value:
+              x402Version: 1
+              error: "X-PAYMENT header is required"
+              accepts:
+                - scheme: "exact"
+                  network: "base"
+                  maxAmountRequired: "100000"
+                  resource: "https://www.sundial.exchange/api/stats"
+                  description: "Access /api/stats - Sundial Exchange API (Base)"
+                  mimeType: "application/json"
+                  payTo: "0xde7ae42f066940c50efeed40fd71dde630148c0a"
+                  maxTimeoutSeconds: 300
+                  asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                  outputSchema:
+                    input:
+                      type: "http"
+                      method: "GET"
+                    output:
+                      type: "object"
+                      properties:
+                        tps:
+                          type: "number"
+                          description: "Transactions per second"
+                        solPriceUsd:
+                          type: "number"
+                          description: "SOL price in USD"
+                        tvlUsd:
+                          type: "number"
+                          description: "Total value locked in USD"
+                        volume24hUsd:
+                          type: "number"
+                          description: "24h volume in USD"
+                        solChange24hPct:
+                          type: "number"
+                          description: "24h SOL price change %"
+                        tvlChange24hPct:
+                          type: "number"
+                          description: "24h TVL change %"
+                        volume24hChangePct:
+                          type: "number"
+                          description: "24h volume change %"
+                  extra:
+                    name: "USD Coin"
+                    version: "2"
+                - scheme: "exact"
+                  network: "solana"
+                  maxAmountRequired: "100000"
+                  resource: "https://www.sundial.exchange/api/stats"
+                  description: "Access /api/stats - Sundial Exchange API (Solana)"
+                  mimeType: "application/json"
+                  payTo: "Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K"
+                  maxTimeoutSeconds: 300
+                  asset: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+                  outputSchema:
+                    input:
+                      type: "http"
+                      method: "GET"
+                    output:
+                      type: "object"
+                      properties:
+                        tps:
+                          type: "number"
+                          description: "Transactions per second"
+                        solPriceUsd:
+                          type: "number"
+                          description: "SOL price in USD"
+                        tvlUsd:
+                          type: "number"
+                          description: "Total value locked in USD"
+                        volume24hUsd:
+                          type: "number"
+                          description: "24h volume in USD"
+                        solChange24hPct:
+                          type: "number"
+                          description: "24h SOL price change %"
+                        tvlChange24hPct:
+                          type: "number"
+                          description: "24h TVL change %"
+                        volume24hChangePct:
+                          type: "number"
+                          description: "24h volume change %"
+                  extra:
+                    name: "USD Coin"
+                    version: "2"
               - scheme: "exact"
                 network: "solana"
                 maxAmountRequired: "100000"

@@ -322,6 +322,12 @@ async function verifyPayment(
 
         const responseText = await verifyResponse.text()
         console.log(`[x402] Verification response (${verifyResponse.status}):`, responseText.substring(0, 200))
+        if (!verifyResponse.ok) {
+            console.log("[x402] Verification error payload:", responseText)
+            if (verifyResponse.status === 500 || verifyResponse.status === 503) {
+                console.log("[x402] Facilitator returned server error during verify")
+            }
+        }
 
         if (verifyResponse.ok) {
             const result = JSON.parse(responseText) as VerificationResponse
@@ -405,6 +411,11 @@ async function settlePayment(
         })
 
         if (!settleResponse.ok) {
+            const responseText = await settleResponse.text()
+            console.log(`[x402] Settlement response (${settleResponse.status}):`, responseText.substring(0, 200))
+            if (settleResponse.status === 500 || settleResponse.status === 503) {
+                console.log("[x402] Facilitator returned server error during settle")
+            }
             return {
                 success: false,
                 error: "Settlement request failed",

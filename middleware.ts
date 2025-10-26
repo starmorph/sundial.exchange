@@ -294,14 +294,12 @@ async function verifyPayment(
             scheme: paymentProof.scheme,
             network: paymentNetwork,
             payload: paymentProof.payload,
-            paymentRequirements: {
-                maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
-                asset,
-                payTo,
-                resource,
-                description: `Access ${url.pathname} - Sundial Exchange API`,
-                maxTimeoutSeconds: 300,
-            },
+            maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
+            asset,
+            payTo,
+            resource,
+            description: `Access ${url.pathname} - Sundial Exchange API`,
+            maxTimeoutSeconds: 300,
         }
 
         console.log(`[x402] Verifying payment on ${paymentNetwork} network...`)
@@ -370,14 +368,12 @@ async function settlePayment(
             scheme: paymentProof.scheme,
             network,
             payload: paymentProof.payload,
-            paymentRequirements: {
-                maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
-                asset,
-                payTo,
-                resource,
-                description: `Access ${url.pathname} - Sundial Exchange API`,
-                maxTimeoutSeconds: 300,
-            },
+            maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
+            asset,
+            payTo,
+            resource,
+            description: `Access ${url.pathname} - Sundial Exchange API`,
+            maxTimeoutSeconds: 300,
         }
 
         console.log(`[x402] Settling payment on ${network}...`)

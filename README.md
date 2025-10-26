@@ -147,7 +147,13 @@ External API requests require a $0.10 USDC payment to access endpoints. The `mid
 
 **Testing:** See `docs/testing-x402.md` for complete testing guide.
 
-**Production ready:** Already configured for Base mainnet!
+**Production ready:** Already configured for Base mainnet with full settlement tracking!
+
+**Payment tracking:**
+- Full verification and settlement through x402.org facilitator
+- Transaction hashes returned in `X-PAYMENT-RESPONSE` header
+- Proper `outputSchema` for API discovery
+- Check supported networks: `npx tsx scripts/check-x402-support.ts`
 
 ### API Documentation
 

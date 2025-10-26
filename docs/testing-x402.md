@@ -120,6 +120,42 @@ When requests include an `Origin` or `Referer` header matching these domains, pa
 - AI agents and bots consuming your API
 - Any programmatic access from external sources
 
+## Payment Flow Details
+
+### What Happens When Someone Pays:
+
+1. **Client** receives 402 response with payment challenge
+2. **Client** creates payment and sends request with `X-PAYMENT` header
+3. **Middleware** verifies payment with x402.org facilitator
+4. **Middleware** settles payment on blockchain
+5. **Middleware** adds `X-PAYMENT-RESPONSE` header with transaction details
+6. **Client** receives API response + settlement proof
+
+### X-PAYMENT-RESPONSE Header
+
+Successful payments include a `X-PAYMENT-RESPONSE` header (base64 encoded JSON):
+
+```json
+{
+  "success": true,
+  "txHash": "0x1234...",
+  "networkId": "base",
+  "timestamp": "2025-10-26T..."
+}
+```
+
+Clients can use the `txHash` to verify the payment on [BaseScan](https://basescan.org).
+
+### Check Supported Networks
+
+To see what networks the facilitator supports:
+
+```bash
+npx tsx scripts/check-x402-support.ts
+```
+
+This will show if Solana support is available!
+
 ## Moving to Production
 
 To accept real payments on Base mainnet:
@@ -128,6 +164,7 @@ To accept real payments on Base mainnet:
 2. Set `X402_RECIPIENT_ADDRESS` to your real Base wallet in production env vars
 3. Deploy to Vercel/production
 4. External API consumers will pay $0.10 in USDC on Base per request
+5. Settlement details returned in `X-PAYMENT-RESPONSE` header
 
 ## Network Details
 

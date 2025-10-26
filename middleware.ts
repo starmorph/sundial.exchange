@@ -187,7 +187,9 @@ function getOutputSchema(pathname: string, method: string) {
 
 function create402Response(request: NextRequest): NextResponse {
     const url = new URL(request.url)
-    const resource = `${url.origin}${url.pathname}${url.search}`
+    // Normalize to canonical domain (without www) to match x402scan submissions
+    const canonicalOrigin = "https://sundial.exchange"
+    const resource = `${canonicalOrigin}${url.pathname}${url.search}`
     const method = request.method
 
     const challenge = {
@@ -239,9 +241,12 @@ async function verifyPayment(
     request: NextRequest,
 ): Promise<VerificationResponse & { network?: string }> {
     const url = new URL(request.url)
-    const resource = `${url.origin}${url.pathname}${url.search}`
+    // Normalize to canonical domain (without www) to match x402scan submissions
+    const canonicalOrigin = "https://sundial.exchange"
+    const resource = `${canonicalOrigin}${url.pathname}${url.search}`
 
     console.log("[x402] Verifying payment for resource:", resource)
+    console.log("[x402] Original request URL:", request.url)
 
     // Try Base network first
     const networks = [
@@ -289,6 +294,9 @@ async function verifyPayment(
                     return { ...result, network }
                 } else {
                     console.log(`[x402] ${network} verification failed:`, result.invalidReason)
+                    console.log(`[x402] ${network} expected resource:`, resource)
+                    console.log(`[x402] ${network} payTo:`, payTo)
+                    console.log(`[x402] ${network} maxAmount:`, (PRICE_USD_CENTS * 10000).toString())
                 }
             }
         } catch (error) {
@@ -309,7 +317,9 @@ async function settlePayment(
     network: string,
 ): Promise<SettlementResponse> {
     const url = new URL(request.url)
-    const resource = `${url.origin}${url.pathname}${url.search}`
+    // Normalize to canonical domain (without www) to match x402scan submissions
+    const canonicalOrigin = "https://sundial.exchange"
+    const resource = `${canonicalOrigin}${url.pathname}${url.search}`
 
     const payTo = network === "solana" ? RECIPIENT_ADDRESS_SOLANA : RECIPIENT_ADDRESS
     const asset = network === "solana" ? USDC_SOLANA : USDC_BASE

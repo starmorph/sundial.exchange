@@ -164,7 +164,8 @@ describe('x402 Middleware', () => {
             const response = await middleware(request)
             const body = await response.json()
 
-            expect(body.accepts[0].resource).toBe('http://localhost:3000/api/stats?hours=24')
+            // Resource URL is normalized to canonical domain (without www)
+            expect(body.accepts[0].resource).toBe('https://sundial.exchange/api/stats?hours=24')
         })
     })
 

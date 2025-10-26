@@ -292,7 +292,7 @@ async function verifyPayment(
             scheme: paymentProof.scheme,
             network: paymentNetwork,
             paymentHeader,
-            paymentPayload: paymentProof.payload,
+            paymentPayload: paymentProof,
             paymentRequirements: {
                 scheme: paymentProof.scheme,
                 network: paymentNetwork,
@@ -370,7 +370,7 @@ async function settlePayment(
             scheme: paymentProof.scheme,
             network,
             paymentHeader,
-            paymentPayload: paymentProof.payload,
+            paymentPayload: paymentProof,
             paymentRequirements: {
                 scheme: paymentProof.scheme,
                 network,

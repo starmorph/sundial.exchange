@@ -412,13 +412,25 @@ async function settlePayment(
 
         if (!settleResponse.ok) {
             const responseText = await settleResponse.text()
-            console.log(`[x402] Settlement response (${settleResponse.status}):`, responseText.substring(0, 200))
+            console.log(`[x402] Settlement response (${settleResponse.status}):`, responseText)
+
+            let facilitatorError: string | null = null
+            try {
+                const parsed = JSON.parse(responseText)
+                if (parsed && typeof parsed.error === "string") {
+                    facilitatorError = parsed.error
+                    console.log("[x402] Settlement error detail:", parsed.error)
+                }
+            } catch {
+                // Non-JSON response, already logged raw text above
+            }
+
             if (settleResponse.status === 500 || settleResponse.status === 503) {
                 console.log("[x402] Facilitator returned server error during settle")
             }
             return {
                 success: false,
-                error: "Settlement request failed",
+                error: facilitatorError || "Settlement request failed",
                 txHash: null,
                 networkId: null,
             }

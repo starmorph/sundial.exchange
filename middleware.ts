@@ -13,6 +13,12 @@ const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 const USDC_SOLANA = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 const PRICE_USD_CENTS = 10
 const FACILITATOR_BASE_URL = process.env.FACILITATOR_URL || "https://facilitator.payai.network"
+const SETTLEMENT_RETRY_DELAYS_MS = [1000, 5000]
+const RETRYABLE_FACILITATOR_ERRORS = [
+    "replacement transaction underpriced",
+    "nonce too low",
+    "already known",
+]
 
 interface SettlementResponse {
     success: boolean
@@ -244,6 +250,23 @@ function parsePaymentHeader(paymentHeader: string) {
     }
 }
 
+function shouldRetrySettlement(status: number, facilitatorError: string | null): boolean {
+    if (status >= 500 || status === 429) {
+        return true
+    }
+
+    if (!facilitatorError) {
+        return false
+    }
+
+    const normalized = facilitatorError.toLowerCase()
+    return RETRYABLE_FACILITATOR_ERRORS.some((hint) => normalized.includes(hint))
+}
+
+async function delay(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 async function verifyPayment(
     paymentHeader: string,
     request: NextRequest,
@@ -376,41 +399,48 @@ async function settlePayment(
         }
     }
 
-    try {
-        const description = `Access ${url.pathname} - Sundial Exchange API (${network === "solana" ? "Solana" : "Base"})`
-        const settlePayload = {
-            x402Version: paymentProof.x402Version ?? 1,
+    const description = `Access ${url.pathname} - Sundial Exchange API (${network === "solana" ? "Solana" : "Base"})`
+    const settlePayload = {
+        x402Version: paymentProof.x402Version ?? 1,
+        scheme: paymentProof.scheme,
+        network,
+        paymentHeader,
+        paymentPayload: paymentProof,
+        paymentRequirements: {
             scheme: paymentProof.scheme,
             network,
-            paymentHeader,
-            paymentPayload: paymentProof,
-            paymentRequirements: {
-                scheme: paymentProof.scheme,
-                network,
-                payTo,
-                asset,
-                resource,
-                maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
-                description,
-                maxTimeoutSeconds: 300,
-                mimeType: "application/json",
-                extra: {
-                    name: "USD Coin",
-                    version: "2",
-                },
+            payTo,
+            asset,
+            resource,
+            maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
+            description,
+            maxTimeoutSeconds: 300,
+            mimeType: "application/json",
+            extra: {
+                name: "USD Coin",
+                version: "2",
             },
-        }
+        },
+    }
 
-        console.log(`[x402] Settling payment on ${network}...`)
-        console.log(`[x402] Settle payload:`, JSON.stringify(settlePayload).substring(0, 300))
+    console.log(`[x402] Settling payment on ${network}...`)
+    console.log(`[x402] Settle payload:`, JSON.stringify(settlePayload).substring(0, 300))
 
-        const settleResponse = await fetch(`${FACILITATOR_BASE_URL}/settle`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(settlePayload),
-        })
+    let lastErrorMessage: string | null = null
 
-        if (!settleResponse.ok) {
+    for (let attempt = 1; attempt <= SETTLEMENT_RETRY_DELAYS_MS.length + 1; attempt++) {
+        try {
+            const settleResponse = await fetch(`${FACILITATOR_BASE_URL}/settle`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(settlePayload),
+            })
+
+            if (settleResponse.ok) {
+                const result = (await settleResponse.json()) as SettlementResponse
+                return result
+            }
+
             const responseText = await settleResponse.text()
             console.log(`[x402] Settlement response (${settleResponse.status}):`, responseText)
 
@@ -428,23 +458,48 @@ async function settlePayment(
             if (settleResponse.status === 500 || settleResponse.status === 503) {
                 console.log("[x402] Facilitator returned server error during settle")
             }
+
+            lastErrorMessage = facilitatorError || "Settlement request failed"
+
+            if (attempt <= SETTLEMENT_RETRY_DELAYS_MS.length && shouldRetrySettlement(settleResponse.status, facilitatorError)) {
+                const delayMs = SETTLEMENT_RETRY_DELAYS_MS[attempt - 1]
+                console.log(`[x402] Retryable settlement failure detected (attempt ${attempt}) - retrying in ${delayMs}ms`)
+                await delay(delayMs)
+                continue
+            }
+
             return {
                 success: false,
-                error: facilitatorError || "Settlement request failed",
+                error: lastErrorMessage,
+                txHash: null,
+                networkId: null,
+            }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Unknown error"
+            lastErrorMessage = message
+            console.log(`[x402] Settlement attempt ${attempt} threw:`, message)
+
+            if (attempt <= SETTLEMENT_RETRY_DELAYS_MS.length) {
+                const delayMs = SETTLEMENT_RETRY_DELAYS_MS[attempt - 1]
+                console.log(`[x402] Retrying settlement after error in ${delayMs}ms`)
+                await delay(delayMs)
+                continue
+            }
+
+            return {
+                success: false,
+                error: message,
                 txHash: null,
                 networkId: null,
             }
         }
+    }
 
-        const result = (await settleResponse.json()) as SettlementResponse
-        return result
-    } catch (error) {
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : "Unknown error",
-            txHash: null,
-            networkId: null,
-        }
+    return {
+        success: false,
+        error: lastErrorMessage || "Settlement request failed",
+        txHash: null,
+        networkId: null,
     }
 }
 

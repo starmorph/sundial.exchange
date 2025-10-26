@@ -306,7 +306,7 @@ async function verifyPayment(
         }
 
         console.log(`[x402] Verifying payment on ${paymentNetwork} network...`)
-        console.log(`[x402] Verify payload:`, JSON.stringify(verifyPayload).substring(0, 300))
+        console.log(`[x402] Verify payload (full):`, JSON.stringify(verifyPayload))
 
         const verifyResponse = await fetch(`${FACILITATOR_BASE_URL}/verify`, {
             method: "POST",

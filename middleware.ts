@@ -289,17 +289,22 @@ async function verifyPayment(
     }
 
     try {
-        const verifyPayload = {
-            x402Version: paymentProof.x402Version ?? 1,
-            scheme: paymentProof.scheme,
+        const paymentRequirements = {
+            scheme: paymentProof.scheme || "exact",
             network: paymentNetwork,
-            payload: paymentProof.payload,
             maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
             asset,
             payTo,
             resource,
             description: `Access ${url.pathname} - Sundial Exchange API`,
             maxTimeoutSeconds: 300,
+        }
+
+        const verifyPayload = {
+            x402Version: paymentProof.x402Version ?? 1,
+            paymentHeader,
+            paymentPayload: paymentProof,
+            paymentRequirements,
         }
 
         console.log(`[x402] Verifying payment on ${paymentNetwork} network...`)
@@ -363,17 +368,22 @@ async function settlePayment(
     }
 
     try {
-        const settlePayload = {
-            x402Version: paymentProof.x402Version ?? 1,
-            scheme: paymentProof.scheme,
+        const paymentRequirements = {
+            scheme: paymentProof.scheme || "exact",
             network,
-            payload: paymentProof.payload,
             maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
             asset,
             payTo,
             resource,
             description: `Access ${url.pathname} - Sundial Exchange API`,
             maxTimeoutSeconds: 300,
+        }
+
+        const settlePayload = {
+            x402Version: paymentProof.x402Version ?? 1,
+            paymentHeader,
+            paymentPayload: paymentProof,
+            paymentRequirements,
         }
 
         console.log(`[x402] Settling payment on ${network}...`)

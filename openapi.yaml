@@ -13,7 +13,7 @@ info:
     - 🏦 Protocol summaries and volumes (Raydium, Orca, Meteora, etc.)
     - 📈 Historical volume data across all major Solana DEXs
 
-    ### disclaimer: this api is not yet production ready and is subject to change. There may be data inaccuracies or missing data e.g. retrieving 7day volume from a specific dex may not be available.
+    *disclaimer:* this api is not yet production ready and is subject to change. There may be data inaccuracies or missing data e.g. retrieving 7day volume from a specific dex may not be available.
 
     ## Payment Gateway (x402 Protocol)
 

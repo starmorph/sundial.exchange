@@ -241,6 +241,8 @@ async function verifyPayment(
     const url = new URL(request.url)
     const resource = `${url.origin}${url.pathname}${url.search}`
 
+    console.log("[x402] Verifying payment for resource:", resource)
+
     // Try Base network first
     const networks = [
         { network: "base", payTo: RECIPIENT_ADDRESS, asset: USDC_BASE },
@@ -249,38 +251,48 @@ async function verifyPayment(
 
     for (const { network, payTo, asset } of networks) {
         try {
+            const verifyPayload = {
+                x402Version: 1,
+                paymentHeader,
+                paymentRequirements: {
+                    scheme: "exact",
+                    network,
+                    maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
+                    resource,
+                    description: `Access ${url.pathname} - Sundial Exchange API`,
+                    mimeType: "application/json",
+                    payTo,
+                    maxTimeoutSeconds: 300,
+                    asset,
+                    extra: {
+                        name: "USD Coin",
+                        version: "2",
+                    },
+                },
+            }
+
+            console.log(`[x402] Trying verification with ${network} network...`)
+
             const verifyResponse = await fetch(`${FACILITATOR_BASE_URL}/verify`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    x402Version: 1,
-                    paymentHeader,
-                    paymentRequirements: {
-                        scheme: "exact",
-                        network,
-                        maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
-                        resource,
-                        description: `Access ${url.pathname} - Sundial Exchange API`,
-                        mimeType: "application/json",
-                        payTo,
-                        maxTimeoutSeconds: 300,
-                        asset,
-                        extra: {
-                            name: "USD Coin",
-                            version: "2",
-                        },
-                    },
-                }),
+                body: JSON.stringify(verifyPayload),
             })
 
+            const responseText = await verifyResponse.text()
+            console.log(`[x402] ${network} verification response (${verifyResponse.status}):`, responseText.substring(0, 200))
+
             if (verifyResponse.ok) {
-                const result = (await verifyResponse.json()) as VerificationResponse
+                const result = JSON.parse(responseText) as VerificationResponse
                 if (result.isValid) {
+                    console.log(`[x402] Payment verified successfully on ${network}!`)
                     return { ...result, network }
+                } else {
+                    console.log(`[x402] ${network} verification failed:`, result.invalidReason)
                 }
             }
         } catch (error) {
-            // Continue to next network
+            console.log(`[x402] Error verifying on ${network}:`, error)
             continue
         }
     }
@@ -349,20 +361,51 @@ async function settlePayment(
 }
 
 export async function middleware(request: NextRequest) {
+    // Log all incoming requests for debugging
+    const url = new URL(request.url)
+    const origin = request.headers.get("origin") || "none"
+    const referer = request.headers.get("referer") || "none"
+    const userAgent = request.headers.get("user-agent") || "none"
+    const hasPayment = !!request.headers.get("x-payment")
+
+    console.log(`[x402] Incoming ${request.method} ${url.pathname}`, {
+        origin: origin.substring(0, 50),
+        referer: referer.substring(0, 50),
+        userAgent: userAgent.substring(0, 50),
+        hasPayment,
+    })
+
     // Exempt our own frontend
     if (isExemptOrigin(request)) {
+        console.log("[x402] Origin exempted, allowing through")
         return NextResponse.next()
     }
 
     // Check for payment header
     const paymentHeader = request.headers.get("x-payment")
+
     if (paymentHeader) {
+        // Log for debugging (remove in production)
+        console.log("[x402] Payment header received:", paymentHeader.substring(0, 50) + "...")
+
         // Verify payment with facilitator (tries both networks)
         const verification = await verifyPayment(paymentHeader, request)
+
+        console.log("[x402] Verification result:", {
+            isValid: verification.isValid,
+            network: verification.network,
+            invalidReason: verification.invalidReason,
+        })
 
         if (verification.isValid && verification.network) {
             // Settle payment with the verified network
             const settlement = await settlePayment(paymentHeader, request, verification.network)
+
+            console.log("[x402] Settlement result:", {
+                success: settlement.success,
+                txHash: settlement.txHash,
+                error: settlement.error,
+            })
 
             // Continue to the API route
             const response = NextResponse.next()
@@ -379,7 +422,11 @@ export async function middleware(request: NextRequest) {
             }
 
             return response
+        } else {
+            console.log("[x402] Payment verification failed:", verification.invalidReason)
         }
+    } else {
+        console.log("[x402] No payment header found, returning 402")
     }
 
     // Return 402 Payment Required

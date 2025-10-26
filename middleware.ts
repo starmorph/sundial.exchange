@@ -188,8 +188,7 @@ function getOutputSchema(pathname: string, method: string) {
 function create402Response(request: NextRequest): NextResponse {
     const url = new URL(request.url)
     // Normalize to canonical domain (without www) to match x402scan submissions
-    const canonicalOrigin = "https://sundial.exchange"
-    const resource = `${canonicalOrigin}${url.pathname}${url.search}`
+    const resource = `${url.origin}${url.pathname}${url.search}`
     const method = request.method
 
     const challenge = {
@@ -251,8 +250,7 @@ async function verifyPayment(
 ): Promise<VerificationResponse & { network?: string }> {
     const url = new URL(request.url)
     // Normalize to canonical domain (without www) to match x402scan submissions
-    const canonicalOrigin = "https://sundial.exchange"
-    const resource = `${canonicalOrigin}${url.pathname}${url.search}`
+    const resource = `${url.origin}${url.pathname}${url.search}`
 
     console.log("[x402] Verifying payment for resource:", resource)
     console.log("[x402] Original request URL:", request.url)
@@ -350,8 +348,7 @@ async function settlePayment(
 ): Promise<SettlementResponse> {
     const url = new URL(request.url)
     // Normalize to canonical domain (without www) to match x402scan submissions
-    const canonicalOrigin = "https://sundial.exchange"
-    const resource = `${canonicalOrigin}${url.pathname}${url.search}`
+    const resource = `${url.origin}${url.pathname}${url.search}`
 
     const payTo = network === "solana" ? RECIPIENT_ADDRESS_SOLANA : RECIPIENT_ADDRESS
     const asset = network === "solana" ? USDC_SOLANA : USDC_BASE

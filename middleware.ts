@@ -268,63 +268,61 @@ async function verifyPayment(
 
     console.log("[x402] Payment proof network:", paymentProof.network)
 
-    // Try Base network first
-    const networks = [
-        { network: "base", payTo: RECIPIENT_ADDRESS, asset: USDC_BASE },
-        { network: "solana", payTo: RECIPIENT_ADDRESS_SOLANA, asset: USDC_SOLANA },
-    ]
+    // Use the network from the payment proof
+    const paymentNetwork = paymentProof.network
+    const payTo = paymentNetwork === "solana" ? RECIPIENT_ADDRESS_SOLANA : RECIPIENT_ADDRESS
+    const asset = paymentNetwork === "solana" ? USDC_SOLANA : USDC_BASE
 
-    for (const { network, payTo, asset } of networks) {
-        try {
-            // PayAI facilitator expects the payment proof with payment requirements
-            const verifyPayload = {
-                x402Version: paymentProof.x402Version || 1,
-                scheme: paymentProof.scheme,
-                network: paymentProof.network,
-                payload: paymentProof.payload,
-                paymentRequirements: {
-                    maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
-                    asset,
-                    payTo,
-                    resource,
-                    description: `Access ${url.pathname} - Sundial Exchange API`,
-                    maxTimeoutSeconds: 300,
-                },
-            }
-
-            console.log(`[x402] Trying verification with ${network} network...`)
-            console.log(`[x402] Verify payload:`, JSON.stringify(verifyPayload).substring(0, 300))
-
-            const verifyResponse = await fetch(`${FACILITATOR_BASE_URL}/verify`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(verifyPayload),
-            })
-
-            const responseText = await verifyResponse.text()
-            console.log(`[x402] ${network} verification response (${verifyResponse.status}):`, responseText.substring(0, 200))
-
-            if (verifyResponse.ok) {
-                const result = JSON.parse(responseText) as VerificationResponse
-                if (result.isValid) {
-                    console.log(`[x402] Payment verified successfully on ${network}!`)
-                    return { ...result, network }
-                } else {
-                    console.log(`[x402] ${network} verification failed:`, result.invalidReason)
-                    console.log(`[x402] ${network} expected resource:`, resource)
-                    console.log(`[x402] ${network} payTo:`, payTo)
-                    console.log(`[x402] ${network} maxAmount:`, (PRICE_USD_CENTS * 10000).toString())
-                }
-            }
-        } catch (error) {
-            console.log(`[x402] Error verifying on ${network}:`, error)
-            continue
+    try {
+        // PayAI facilitator expects the payment proof with payment requirements
+        const verifyPayload = {
+            x402Version: paymentProof.x402Version || 1,
+            scheme: paymentProof.scheme,
+            network: paymentProof.network,
+            payload: paymentProof.payload,
+            paymentRequirements: {
+                maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
+                asset,
+                payTo,
+                resource,
+                description: `Access ${url.pathname} - Sundial Exchange API`,
+                maxTimeoutSeconds: 300,
+            },
         }
-    }
 
-    return {
-        isValid: false,
-        invalidReason: "Payment verification failed for all networks",
+        console.log(`[x402] Verifying payment on ${paymentNetwork} network...`)
+        console.log(`[x402] Verify payload:`, JSON.stringify(verifyPayload).substring(0, 300))
+
+        const verifyResponse = await fetch(`${FACILITATOR_BASE_URL}/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(verifyPayload),
+        })
+
+        const responseText = await verifyResponse.text()
+        console.log(`[x402] Verification response (${verifyResponse.status}):`, responseText.substring(0, 200))
+
+        if (verifyResponse.ok) {
+            const result = JSON.parse(responseText) as VerificationResponse
+            if (result.isValid) {
+                console.log(`[x402] Payment verified successfully on ${paymentNetwork}!`)
+                return { ...result, network: paymentNetwork }
+            } else {
+                console.log(`[x402] Verification failed:`, result.invalidReason)
+                return { ...result, network: paymentNetwork }
+            }
+        } else {
+            return {
+                isValid: false,
+                invalidReason: `Facilitator returned ${verifyResponse.status}: ${responseText}`,
+            }
+        }
+    } catch (error) {
+        console.log(`[x402] Error verifying payment:`, error)
+        return {
+            isValid: false,
+            invalidReason: error instanceof Error ? error.message : "Unknown verification error",
+        }
     }
 }
 

@@ -199,6 +199,14 @@ paths:
           $ref: "#/components/responses/PaymentRequired"
 
 components:
+  parameters:
+    XPaymentHeader:
+      name: X-PAYMENT
+      in: header
+      required: false
+      description: Base64-encoded x402 payment proof issued by the PayAI facilitator.
+      schema:
+        type: string
   responses:
     PaymentRequired:
       description: Payment required to access this resource. Contains x402 payment instructions.
@@ -224,7 +232,7 @@ components:
               - scheme: "exact"
                 network: "base"
                 maxAmountRequired: "100000"
-                resource: "https://sundial.exchange/api/stats"
+                resource: "https://www.sundial.exchange/api/stats"
                 description: "Access /api/stats - Sundial Exchange API (Base)"
                 mimeType: "application/json"
                 payTo: "0xde7ae42f066940c50efeed40fd71dde630148c0a"
@@ -261,10 +269,15 @@ components:
                 extra:
                   name: "USD Coin"
                   version: "2"
+        headers:
+          X-PAYMENT-RESPONSE:
+            description: Base64-encoded JSON settlement details returned after successful payment verification.
+            schema:
+              type: string
               - scheme: "exact"
                 network: "solana"
                 maxAmountRequired: "100000"
-                resource: "https://sundial.exchange/api/stats"
+                resource: "https://www.sundial.exchange/api/stats"
                 description: "Access /api/stats - Sundial Exchange API (Solana)"
                 mimeType: "application/json"
                 payTo: "Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K"

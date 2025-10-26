@@ -289,10 +289,11 @@ async function verifyPayment(
     }
 
     try {
-        // PayAI facilitator expects paymentPayload (the entire decoded payment proof)
         const verifyPayload = {
-            x402Version: paymentProof.x402Version || 1,
-            paymentPayload: paymentProof,  // Send the ENTIRE payment proof
+            x402Version: paymentProof.x402Version ?? 1,
+            scheme: paymentProof.scheme,
+            network: paymentNetwork,
+            payload: paymentProof.payload,
             paymentRequirements: {
                 maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
                 asset,
@@ -364,10 +365,11 @@ async function settlePayment(
     }
 
     try {
-        // PayAI facilitator expects paymentPayload (the entire decoded payment proof)
         const settlePayload = {
-            x402Version: paymentProof.x402Version || 1,
-            paymentPayload: paymentProof,  // Send the ENTIRE payment proof
+            x402Version: paymentProof.x402Version ?? 1,
+            scheme: paymentProof.scheme,
+            network,
+            payload: paymentProof.payload,
             paymentRequirements: {
                 maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
                 asset,
@@ -378,7 +380,7 @@ async function settlePayment(
             },
         }
 
-        console.log(`[x402] Settling payment on ${paymentNetwork}...`)
+        console.log(`[x402] Settling payment on ${network}...`)
         console.log(`[x402] Settle payload:`, JSON.stringify(settlePayload).substring(0, 300))
 
         const settleResponse = await fetch(`${FACILITATOR_BASE_URL}/settle`, {

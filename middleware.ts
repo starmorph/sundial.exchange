@@ -12,7 +12,7 @@ const RECIPIENT_ADDRESS_SOLANA = process.env.X402_RECIPIENT_ADDRESS_SOLANA || "A
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 const USDC_SOLANA = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 const PRICE_USD_CENTS = 10
-const FACILITATOR_BASE_URL = process.env.FACILITATOR_URL || "https://facilitator.payai.network"
+const FACILITATOR_BASE_URL = process.env.FACILITATOR_URL || "https://x402.org/facilitator"
 
 interface SettlementResponse {
     success: boolean
@@ -289,12 +289,10 @@ async function verifyPayment(
     }
 
     try {
-        // PayAI facilitator expects the payment proof with payment requirements
+        // PayAI facilitator expects paymentPayload (the entire decoded payment proof)
         const verifyPayload = {
             x402Version: paymentProof.x402Version || 1,
-            scheme: paymentProof.scheme,
-            network: paymentProof.network,
-            payload: paymentProof.payload,
+            paymentPayload: paymentProof,  // Send the ENTIRE payment proof
             paymentRequirements: {
                 maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
                 asset,
@@ -366,12 +364,10 @@ async function settlePayment(
     }
 
     try {
-        // PayAI facilitator expects the same structure for settlement
+        // PayAI facilitator expects paymentPayload (the entire decoded payment proof)
         const settlePayload = {
             x402Version: paymentProof.x402Version || 1,
-            scheme: paymentProof.scheme,
-            network: paymentProof.network,
-            payload: paymentProof.payload,
+            paymentPayload: paymentProof,  // Send the ENTIRE payment proof
             paymentRequirements: {
                 maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
                 asset,
@@ -382,7 +378,7 @@ async function settlePayment(
             },
         }
 
-        console.log(`[x402] Settling payment on ${network}...`)
+        console.log(`[x402] Settling payment on ${paymentNetwork}...`)
         console.log(`[x402] Settle payload:`, JSON.stringify(settlePayload).substring(0, 300))
 
         const settleResponse = await fetch(`${FACILITATOR_BASE_URL}/settle`, {

@@ -12,6 +12,7 @@ const RECIPIENT_ADDRESS_SOLANA = process.env.X402_RECIPIENT_ADDRESS_SOLANA || "A
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 const USDC_SOLANA = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 const DEFAULT_PRICE_USD = 0.1
+const POOL_ANALYTICS_PRICE_USD = 0.001
 const FACILITATOR_BASE_URL = process.env.FACILITATOR_URL || "https://facilitator.payai.network"
 const SETTLEMENT_RETRY_DELAYS_MS = [1000, 5000]
 const RETRYABLE_FACILITATOR_ERRORS = [
@@ -66,6 +67,10 @@ function getEndpointPriceUsd(pathname: string): number {
     const normalized = normalizePathname(pathname)
     if (normalized === "/api/premium-insight") {
         return 10
+    }
+
+    if (normalized.startsWith("/api/pools/") && normalized.endsWith("/analytics")) {
+        return POOL_ANALYTICS_PRICE_USD
     }
 
     return DEFAULT_PRICE_USD

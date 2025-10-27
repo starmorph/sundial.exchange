@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Sundial Exchange API
-  version: 1.1.3
+  version: 1.1.4
   description: |
     Real-time Solana DEX analytics API powered by x402 payments.
 
@@ -25,6 +25,7 @@ info:
     | `/api/stats` | 0.10 |
     | `/api/trending` | 0.10 |
     | `/api/dex/*` | 0.10 |
+    | `/api/pools/{id}/analytics` | 0.001 |
     | `/api/premium-insight` | **10.00** |
 
     ### Supported Networks
@@ -103,6 +104,49 @@ paths:
           $ref: "#/components/responses/PaymentRequired"
         "500":
           description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/pools/{id}/analytics:
+    get:
+      tags: [dex]
+      operationId: getPoolAnalytics
+      summary: Get liquidity and volume analytics for a specific Solana pool
+      description: |
+        Returns time-sensitive liquidity, fee, and reserve metrics for a given Solana pool sourced from the Jupiter Ultra API.
+
+        Pricing: requires a 0.001 USDC x402 payment on Solana per request.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Pool address (base58)
+      responses:
+        "200":
+          description: Pool analytics payload
+          headers:
+            X-402-Output-Schema:
+              description: JSON metadata describing price and response schema for x402 clients.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PoolAnalyticsResponse"
+        "400":
+          description: Missing pool id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
+        "502":
+          description: Upstream Jupiter API error
           content:
             application/json:
               schema:
@@ -551,19 +595,72 @@ components:
 
     DexVolumeData:
       type: object
-      required: [date, dailyVolume, totalVolume, breakdown]
+    PoolAnalyticsMetrics:
+      type: object
       properties:
-        date:
+        volume24hUsd:
           type: number
-          description: Unix timestamp (seconds or ms as provided by upstream)
-        dailyVolume:
+        volume7dUsd:
           type: number
-        totalVolume:
+        fees24hUsd:
           type: number
-        breakdown:
+        tvlUsd:
+          type: number
+        liquidityUsd:
+          type: number
+        apr:
+          type: [number, "null"]
+        apy:
+          type: [number, "null"]
+
+    PoolReservesSnapshot:
+      type: object
+      properties:
+        baseSymbol:
+          type: string
+        quoteSymbol:
+          type: string
+        baseMint:
+          type: [string, "null"]
+        quoteMint:
+          type: [string, "null"]
+        baseAmount:
+          type: number
+        quoteAmount:
+          type: number
+
+    PoolAnalyticsResponse:
+      type: object
+      required:
+        [
+          poolId,
+          poolName,
+          metrics,
+          reserves,
+          priceImpactBps,
+          updatedAtUnix,
+          fetchedAt,
+        ]
+      properties:
+        poolId:
+          type: string
+        poolName:
+          type: string
+        metrics:
+          $ref: "#/components/schemas/PoolAnalyticsMetrics"
+        reserves:
+          $ref: "#/components/schemas/PoolReservesSnapshot"
+        priceImpactBps:
+          type: [number, "null"]
+        updatedAtUnix:
+          type: number
+        fetchedAt:
+          type: string
+          format: date-time
+        raw:
+          description: Raw upstream payload from Jupiter Ultra.
           type: object
-          additionalProperties:
-            type: number
+          additionalProperties: true
 
     ChainTvls:
       type: object

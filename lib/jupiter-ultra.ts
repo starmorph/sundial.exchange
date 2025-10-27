@@ -59,6 +59,37 @@ export interface HoldingsResponse {
   }
 }
 
+export interface PoolVolumeMetrics {
+  volume24hUsd: number
+  volume7dUsd: number
+  fees24hUsd: number
+  tvlUsd: number
+  liquidityUsd: number
+  apr: number | null
+  apy: number | null
+}
+
+export interface PoolReserveSnapshot {
+  baseSymbol: string
+  quoteSymbol: string
+  baseMint: string | null
+  quoteMint: string | null
+  baseAmount: number
+  quoteAmount: number
+}
+
+export interface JupiterPoolSnapshot {
+  poolId: string
+  poolName: string
+  lpMint: string | null
+  metrics: PoolVolumeMetrics
+  reserves: PoolReserveSnapshot
+  priceImpactBps: number | null
+  updatedAtUnix: number
+  fetchedAt: string
+  raw: unknown
+}
+
 export async function getHoldings(address: string): Promise<HoldingsResponse> {
   const response = await fetch(`${JUPITER_ULTRA_API}/holdings/${address}`)
 
@@ -67,6 +98,61 @@ export async function getHoldings(address: string): Promise<HoldingsResponse> {
   }
 
   return response.json()
+}
+
+export async function getPoolAnalytics(poolAddress: string): Promise<JupiterPoolSnapshot> {
+  const response = await fetch(`${JUPITER_ULTRA_API}/pools/${poolAddress}`)
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Jupiter pool analytics: ${response.statusText}`)
+  }
+
+  const raw = await response.json()
+  const data = (raw && typeof raw === "object" && "data" in raw) ? (raw as any).data : raw
+
+  const normalizeNumber = (value: unknown, fallback = 0): number => {
+    if (typeof value === "number") return value
+    if (typeof value === "string" && value.trim() !== "") {
+      const parsed = Number(value)
+      return Number.isFinite(parsed) ? parsed : fallback
+    }
+    return fallback
+  }
+
+  const baseSymbol = (data?.baseSymbol || data?.tokenSymbol0 || data?.baseTicker || "").toString()
+  const quoteSymbol = (data?.quoteSymbol || data?.tokenSymbol1 || data?.quoteTicker || "").toString()
+
+  return {
+    poolId: (data?.address || poolAddress)?.toString(),
+    poolName: (data?.name || `${baseSymbol}/${quoteSymbol}` || "Unknown Pool").toString(),
+    lpMint: data?.lpMint?.toString?.() ?? data?.lpTokenMint?.toString?.() ?? null,
+    metrics: {
+      volume24hUsd: normalizeNumber(data?.volume24h ?? data?.volume24hUsd),
+      volume7dUsd: normalizeNumber(data?.volume7d ?? data?.volume7dUsd),
+      fees24hUsd: normalizeNumber(data?.fees24h ?? data?.fees24hUsd),
+      tvlUsd: normalizeNumber(data?.tvl ?? data?.tvlUsd ?? data?.liquidityUsd),
+      liquidityUsd: normalizeNumber(data?.liquidity ?? data?.liquidityUsd ?? data?.tvlUsd),
+      apr: typeof data?.apr === "number" ? data.apr : (typeof data?.apr === "string" ? Number(data.apr) : null),
+      apy: typeof data?.apy === "number" ? data.apy : (typeof data?.apy === "string" ? Number(data.apy) : null),
+    },
+    reserves: {
+      baseSymbol,
+      quoteSymbol,
+      baseMint: data?.baseMint?.toString?.() ?? data?.tokenMint0?.toString?.() ?? null,
+      quoteMint: data?.quoteMint?.toString?.() ?? data?.tokenMint1?.toString?.() ?? null,
+      baseAmount: normalizeNumber(data?.baseReserve ?? data?.baseAmount ?? data?.tokenAmount0),
+      quoteAmount: normalizeNumber(data?.quoteReserve ?? data?.quoteAmount ?? data?.tokenAmount1),
+    },
+    priceImpactBps: typeof data?.priceImpact === "number"
+      ? data.priceImpact * 100
+      : (typeof data?.priceImpact === "string" ? Number(data.priceImpact) * 100 : null),
+    updatedAtUnix: normalizeNumber(
+      data?.lastUpdateUnix ?? data?.lastUpdatedUnix ?? data?.updatedAtUnix ?? data?.timestamp,
+      Math.floor(Date.now() / 1000),
+    ),
+    fetchedAt: new Date().toISOString(),
+    raw: data,
+  }
 }
 
 export async function getJupiterOrder(params: JupiterOrderParams): Promise<JupiterOrderResponse> {

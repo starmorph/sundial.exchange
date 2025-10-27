@@ -11,7 +11,7 @@ const RECIPIENT_ADDRESS = process.env.X402_RECIPIENT_ADDRESS || "0xde7ae42f06694
 const RECIPIENT_ADDRESS_SOLANA = process.env.X402_RECIPIENT_ADDRESS_SOLANA || "Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K"
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 const USDC_SOLANA = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-const PRICE_USD_CENTS = 10
+const DEFAULT_PRICE_USD = 0.1
 const FACILITATOR_BASE_URL = process.env.FACILITATOR_URL || "https://facilitator.payai.network"
 const SETTLEMENT_RETRY_DELAYS_MS = [1000, 5000]
 const RETRYABLE_FACILITATOR_ERRORS = [
@@ -53,6 +53,14 @@ function isExemptOrigin(request: NextRequest): boolean {
     }
 
     return false
+}
+
+function getEndpointPriceUsd(pathname: string): number {
+    if (pathname === "/api/premium-insight") {
+        return 10
+    }
+
+    return DEFAULT_PRICE_USD
 }
 
 function getOutputSchema(pathname: string, method: string) {
@@ -191,11 +199,12 @@ function getOutputSchema(pathname: string, method: string) {
     )
 }
 
-function create402Response(request: NextRequest): NextResponse {
+function create402Response(request: NextRequest, priceUsd: number): NextResponse {
     const url = new URL(request.url)
     // Normalize to canonical domain (without www) to match x402scan submissions
     const resource = `${url.origin}${url.pathname}${url.search}`
     const method = request.method
+    const maxAmountRequired = Math.round(priceUsd * 1_000_000).toString()
 
     const challenge = {
         x402Version: 1,
@@ -205,9 +214,9 @@ function create402Response(request: NextRequest): NextResponse {
             {
                 scheme: "exact",
                 network: "base",
-                maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(), // USDC has 6 decimals
+                maxAmountRequired,
                 resource,
-                description: `Access ${url.pathname} - Sundial Exchange API (Base)`,
+                description: `Access ${url.pathname} - Sundial Exchange API (Base) for $${priceUsd.toFixed(2)}`,
                 mimeType: "application/json",
                 payTo: RECIPIENT_ADDRESS,
                 maxTimeoutSeconds: 300,
@@ -222,9 +231,9 @@ function create402Response(request: NextRequest): NextResponse {
             {
                 scheme: "exact",
                 network: "solana",
-                maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(), // USDC has 6 decimals
+                maxAmountRequired,
                 resource,
-                description: `Access ${url.pathname} - Sundial Exchange API (Solana)`,
+                description: `Access ${url.pathname} - Sundial Exchange API (Solana) for $${priceUsd.toFixed(2)}`,
                 mimeType: "application/json",
                 payTo: RECIPIENT_ADDRESS_SOLANA,
                 maxTimeoutSeconds: 300,
@@ -270,10 +279,12 @@ async function delay(ms: number) {
 async function verifyPayment(
     paymentHeader: string,
     request: NextRequest,
+    priceUsd: number,
 ): Promise<VerificationResponse & { network?: string }> {
     const url = new URL(request.url)
     // Normalize to canonical domain (without www) to match x402scan submissions
     const resource = `${url.origin}${url.pathname}${url.search}`
+    const maxAmountRequired = Math.round(priceUsd * 1_000_000).toString()
 
     console.log("[x402] Verifying payment for resource:", resource)
     console.log("[x402] Original request URL:", request.url)
@@ -306,11 +317,11 @@ async function verifyPayment(
     // Check if authorization value matches our price
     if (paymentProof.payload?.authorization?.value) {
         console.log("[x402] Authorization value:", paymentProof.payload.authorization.value)
-        console.log("[x402] Our maxAmountRequired:", (PRICE_USD_CENTS * 10000).toString())
+        console.log("[x402] Our maxAmountRequired:", maxAmountRequired)
     }
 
     try {
-        const description = `Access ${url.pathname} - Sundial Exchange API (${paymentNetwork === "solana" ? "Solana" : "Base"})`
+        const description = `Access ${url.pathname} - Sundial Exchange API (${paymentNetwork === "solana" ? "Solana" : "Base"}) for $${priceUsd.toFixed(2)}`
         const verifyPayload = {
             x402Version: paymentProof.x402Version ?? 1,
             scheme: paymentProof.scheme,
@@ -323,7 +334,7 @@ async function verifyPayment(
                 payTo,
                 asset,
                 resource,
-                maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
+                maxAmountRequired,
                 description,
                 maxTimeoutSeconds: 300,
                 mimeType: "application/json",
@@ -380,6 +391,7 @@ async function settlePayment(
     paymentHeader: string,
     request: NextRequest,
     network: string,
+    priceUsd: number,
 ): Promise<SettlementResponse> {
     const url = new URL(request.url)
     // Normalize to canonical domain (without www) to match x402scan submissions
@@ -399,7 +411,8 @@ async function settlePayment(
         }
     }
 
-    const description = `Access ${url.pathname} - Sundial Exchange API (${network === "solana" ? "Solana" : "Base"})`
+    const description = `Access ${url.pathname} - Sundial Exchange API (${network === "solana" ? "Solana" : "Base"}) for $${priceUsd.toFixed(2)}`
+    const maxAmountRequired = Math.round(priceUsd * 1_000_000).toString()
     const settlePayload = {
         x402Version: paymentProof.x402Version ?? 1,
         scheme: paymentProof.scheme,
@@ -412,7 +425,7 @@ async function settlePayment(
             payTo,
             asset,
             resource,
-            maxAmountRequired: (PRICE_USD_CENTS * 10000).toString(),
+            maxAmountRequired,
             description,
             maxTimeoutSeconds: 300,
             mimeType: "application/json",
@@ -526,13 +539,14 @@ export async function middleware(request: NextRequest) {
 
     // Check for payment header
     const paymentHeader = request.headers.get("x-payment")
+    const priceUsd = getEndpointPriceUsd(url.pathname)
 
     if (paymentHeader) {
         // Log for debugging (remove in production)
         console.log("[x402] Payment header received:", paymentHeader.substring(0, 50) + "...")
 
         // Verify payment with facilitator (tries both networks)
-        const verification = await verifyPayment(paymentHeader, request)
+        const verification = await verifyPayment(paymentHeader, request, priceUsd)
 
         console.log("[x402] Verification result:", {
             isValid: verification.isValid,
@@ -542,7 +556,7 @@ export async function middleware(request: NextRequest) {
 
         if (verification.isValid && verification.network) {
             // Settle payment with the verified network
-            const settlement = await settlePayment(paymentHeader, request, verification.network)
+            const settlement = await settlePayment(paymentHeader, request, verification.network, priceUsd)
 
             console.log("[x402] Settlement result:", {
                 success: settlement.success,
@@ -573,7 +587,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Return 402 Payment Required
-    return create402Response(request)
+    return create402Response(request, priceUsd)
 }
 
 export const config = {

@@ -12,6 +12,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^2.0.53",
     "@ai-sdk/react": "^2.0.80",
     "@emotion/is-prop-valid": "latest",
     "@hookform/resolvers": "^3.10.0",

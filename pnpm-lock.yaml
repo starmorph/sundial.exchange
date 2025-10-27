@@ -24,8 +24,8 @@ importers:
         specifier: ^6.0.44
         version: 6.0.44
       '@nanostores/react':
-        specifier: github:ai/react
-        version: git+https://git@github.com:ai/react.git#a6ad745cc307881916944ee4d6ba04bdda978dc6(nanostores@1.0.1)(react@19.2.0)
+        specifier: ^1.0.0
+        version: 1.0.0(nanostores@1.0.1)(react@19.2.0)
       '@next/third-parties':
         specifier: ^15.5.5
         version: 15.5.5(next@15.2.4(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
@@ -939,9 +939,8 @@ packages:
     resolution: {integrity: sha512-K5KqIhPI/EoCTbA6CGbrenM9s41OouyK8A03fGJJcla/zKucsgLbz8HNbeseoLarRPgyWJsUyCYqFhI7t3Ra9Q==}
     engines: {node: '>= 10.*'}
 
-  '@nanostores/react@git+https://git@github.com:ai/react.git#a6ad745cc307881916944ee4d6ba04bdda978dc6':
-    resolution: {commit: a6ad745cc307881916944ee4d6ba04bdda978dc6, repo: git@github.com:ai/react.git, type: git}
-    version: 1.0.0
+  '@nanostores/react@1.0.0':
+    resolution: {integrity: sha512-eDduyNy+lbQJMg6XxZ/YssQqF6b4OXMFEZMYKPJCCmBevp1lg0g+4ZRi94qGHirMtsNfAWKNwsjOhC+q1gvC+A==}
     engines: {node: ^20.0.0 || >=22.0.0}
     peerDependencies:
       nanostores: ^0.9.0 || ^0.10.0 || ^0.11.0 || ^1.0.0
@@ -7861,7 +7860,7 @@ snapshots:
 
   '@mobily/ts-belt@3.13.1': {}
 
-  '@nanostores/react@git+https://git@github.com:ai/react.git#a6ad745cc307881916944ee4d6ba04bdda978dc6(nanostores@1.0.1)(react@19.2.0)':
+  '@nanostores/react@1.0.0(nanostores@1.0.1)(react@19.2.0)':
     dependencies:
       nanostores: 1.0.1
       react: 19.2.0

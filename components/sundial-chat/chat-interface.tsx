@@ -10,13 +10,13 @@ import { ImageIcon, Send, Sun } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export function SundialChatInterface() {
-  const isComingSoon = true
   const { connected, publicKey } = useWallet()
   const isConnected = connected && publicKey !== null
 
   const [input, setInput] = useState('')
 
   const { messages, sendMessage, regenerate, status, error } = useChat({
+    api: "/api/chat",
     onError: (error: Error) => {
       console.error("[v0] Chat error:", error)
     },
@@ -38,7 +38,7 @@ export function SundialChatInterface() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || isComingSoon) return
+    if (!input.trim() || !isConnected) return
     sendMessage({ text: input })
     setInput('')
   }
@@ -53,15 +53,21 @@ export function SundialChatInterface() {
                 <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/20 border border-primary/30">
                   <Sun className="h-10 w-10 text-primary" />
                 </div>
-                <h2 className="mb-2 text-2xl font-semibold text-foreground">Welcome to Sundial Chat <span className="text-primary">COMING SOON!</span></h2>
+                <h2 className="mb-2 text-2xl font-semibold text-foreground">Welcome to Sundial Chat</h2>
                 <p className="mb-8 max-w-md text-muted-foreground">
-                  Your AI assistant powered by Solana micropayments. Generate images for just 0.01 USDC per request.
+                  Ask for analytics, x402 tips, or premium endpoints. Responses are powered by Vercel AI + OpenAI.
                 </p>
+                {!isConnected && (
+                  <p className="text-sm text-muted-foreground">
+                    Connect your wallet to start paying per-response with x402.
+                  </p>
+                )}
                 <div className="flex flex-wrap justify-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     className="gap-2 bg-transparent border-primary/30 text-foreground hover:bg-primary/10"
+                    disabled={!isConnected}
                   >
                     <ImageIcon className="h-4 w-4" />
                     Generate an image
@@ -70,6 +76,7 @@ export function SundialChatInterface() {
                     variant="outline"
                     size="sm"
                     className="border-primary/30 text-foreground hover:bg-primary/10 bg-transparent"
+                    disabled={!isConnected}
                   >
                     Explain x402 protocol
                   </Button>
@@ -77,6 +84,7 @@ export function SundialChatInterface() {
                     variant="outline"
                     size="sm"
                     className="border-primary/30 text-foreground hover:bg-primary/10 bg-transparent"
+                    disabled={!isConnected}
                   >
                     How does this work?
                   </Button>
@@ -132,6 +140,13 @@ export function SundialChatInterface() {
                 </div>
               </div>
             )}
+            {messages.length > 0 && !isLoading && messages[messages.length - 1]?.role === "assistant" && (
+              <div className="flex justify-center">
+                <Button variant="ghost" size="sm" onClick={() => regenerate()} className="text-muted-foreground hover:text-foreground">
+                  Regenerate response
+                </Button>
+              </div>
+            )}
           </div>
         </ScrollArea>
 
@@ -156,7 +171,7 @@ export function SundialChatInterface() {
               </Button>
             </div>
             <p className="mt-2 text-center text-xs text-muted-foreground">
-              Image generation costs 0.01 USDC per request via x402 protocol on Solana
+              Responses settle via x402 micropayments. Premium endpoints like `/api/premium-insight` cost extra.
             </p>
           </form>
         </div>

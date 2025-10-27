@@ -55,8 +55,16 @@ function isExemptOrigin(request: NextRequest): boolean {
     return false
 }
 
+function normalizePathname(pathname: string): string {
+    if (pathname.length > 1 && pathname.endsWith("/")) {
+        return pathname.replace(/\/+$/, "")
+    }
+    return pathname
+}
+
 function getEndpointPriceUsd(pathname: string): number {
-    if (pathname === "/api/premium-insight") {
+    const normalized = normalizePathname(pathname)
+    if (normalized === "/api/premium-insight") {
         return 10
     }
 

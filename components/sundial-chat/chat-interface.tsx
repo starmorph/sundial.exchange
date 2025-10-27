@@ -68,9 +68,9 @@ export function SundialChatInterface() {
 
   return (
     <>
-      <div className="flex h-full flex-col">
-        <ScrollArea className="flex-1 px-4 py-6">
-          <div className="mx-auto max-w-3xl space-y-6 pt-8 pb-10">
+      <div className="flex h-full flex-col overflow-hidden">
+        <ScrollArea className="flex-1 overflow-y-auto px-4 py-6">
+          <div className="mx-auto max-w-3xl space-y-6 pt-8 pb-6">
             {messages.length === 0 && (
               <div className="flex h-[60vh] flex-col items-center justify-center text-center">
                 <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/20 border border-primary/30">
@@ -197,7 +197,7 @@ export function SundialChatInterface() {
           </div>
         </ScrollArea>
 
-        <div className="border-t border-border bg-card px-4 py-4">
+        <div className="shrink-0 border-t border-border bg-card px-4 py-4">
           <form onSubmit={handleFormSubmit} className="mx-auto max-w-3xl">
             <div className="flex gap-2">
               <Input

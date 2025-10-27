@@ -37,6 +37,12 @@ export function Navbar() {
             ANALYTICS
           </Link>
           <Link
+            href="/chat"
+            className="ml-2 flex items-center gap-1.5 px-3 h-8 rounded-md bg-muted/50 border border-border/50 hover:bg-muted/70 transition-all text-xs font-mono font-semibold text-muted-foreground hover:text-foreground tracking-wide"
+          >
+            CHAT
+          </Link>
+          <Link
             href="https://registry.scalar.com/@starmorph/apis/sundial-exchange-api/latest"
             target="_blank"
             rel="noreferrer"

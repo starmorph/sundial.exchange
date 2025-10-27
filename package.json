@@ -12,9 +12,11 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@ai-sdk/react": "^2.0.80",
     "@emotion/is-prop-valid": "latest",
     "@hookform/resolvers": "^3.10.0",
     "@jup-ag/api": "^6.0.44",
+    "@nanostores/react": "github:ai/react",
     "@next/third-parties": "^15.5.5",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
@@ -49,6 +51,7 @@
     "@solana/wallet-adapter-wallets": "latest",
     "@solana/web3.js": "latest",
     "@vercel/analytics": "latest",
+    "ai": "^5.0.80",
     "ai-elements": "^1.1.2",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",

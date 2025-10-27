@@ -15,7 +15,7 @@ import { useChat, type UIMessage } from "@ai-sdk/react"
 import { useWallet } from '@solana/wallet-adapter-react'
 import type { ToolUIPart, UITools } from "ai"
 import { DefaultChatTransport } from "ai"
-import { ImageIcon, Send, Sun } from "lucide-react"
+import { Send, Sun } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
 const formatToolName = (type: string): string => {
@@ -66,6 +66,11 @@ export function SundialChatInterface() {
     setInput("")
   }
 
+  const handleQuickAction = (message: string) => {
+    if (!isConnected) return
+    sendMessage({ text: message })
+  }
+
   return (
     <>
       <div className="flex h-full flex-col overflow-hidden">
@@ -91,25 +96,27 @@ export function SundialChatInterface() {
                     size="sm"
                     className="gap-2 bg-transparent border-primary/30 text-foreground hover:bg-primary/10"
                     disabled={!isConnected}
+                    onClick={() => handleQuickAction("What are Raydium's current volume and TVL stats?")}
                   >
-                    <ImageIcon className="h-4 w-4" />
-                    Generate an image
+                    📊 Raydium Stats
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     className="border-primary/30 text-foreground hover:bg-primary/10 bg-transparent"
                     disabled={!isConnected}
+                    onClick={() => handleQuickAction("Explain the x402 protocol and how it works")}
                   >
-                    Explain x402 protocol
+                    💳 Explain x402
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     className="border-primary/30 text-foreground hover:bg-primary/10 bg-transparent"
                     disabled={!isConnected}
+                    onClick={() => handleQuickAction("How does Sundial Exchange work?")}
                   >
-                    How does this work?
+                    ❓ How it works
                   </Button>
                 </div>
               </div>

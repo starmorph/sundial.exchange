@@ -2,43 +2,40 @@ import { createOpenAI } from "@ai-sdk/openai"
 import { convertToModelMessages, streamText } from "ai"
 import { z } from "zod"
 
-import { getSolanaDexProtocols, getSolanaDexVolumes } from "@/lib/defillama-volumes"
+import { getDexProtocolSummary } from "@/lib/defillama-volumes"
 
 const dexOverviewTool = {
-    description: "Fetch current Solana DEX protocol summaries and historical volume data aggregated from DeFiLlama.",
+    description: "Fetch detailed information for a specific Solana DEX protocol from DeFiLlama. Use this to get volume metrics, TVL, and other stats for DEXs like 'raydium', 'orca', 'jupiter', 'meteora', etc.",
     inputSchema: z.object({
-        days: z
-            .number()
-            .int()
-            .min(1)
-            .max(90)
-            .optional()
-            .describe("Limit the volume timeline to the most recent N days (max 90)."),
+        protocol: z
+            .string()
+            .describe("The DEX protocol name (e.g., 'raydium', 'orca', 'jupiter', 'meteora', 'phoenix'). Use lowercase."),
     }),
-    execute: async ({ days }: { days?: number }) => {
-        const [protocols, volumes] = await Promise.all([
-            getSolanaDexProtocols(),
-            getSolanaDexVolumes(),
-        ])
+    execute: async ({ protocol }: { protocol: string }) => {
+        const protocolData = await getDexProtocolSummary(protocol.toLowerCase())
 
-        const daysToInclude = days ? Math.min(days, volumes.length) : volumes.length
-        const recentVolumes = days ? volumes.slice(volumeSliceStart(volumes.length, daysToInclude)) : volumes
+        if (!protocolData) {
+            return {
+                error: `Could not find data for DEX protocol: ${protocol}`,
+                suggestion: "Try 'raydium', 'orca', 'jupiter', or 'meteora'",
+                generatedAt: new Date().toISOString(),
+            }
+        }
 
         return {
-            protocols,
-            volumes: recentVolumes,
+            protocol: protocolData.name,
+            displayName: protocolData.displayName,
+            total24h: protocolData.total24h,
+            total7d: protocolData.total7d,
+            total30d: protocolData.total30d,
+            totalAllTime: protocolData.totalAllTime,
+            change_1d: protocolData.change_1d,
+            change_7d: protocolData.change_7d,
+            tvl: protocolData.tvl,
+            chains: protocolData.chains,
             generatedAt: new Date().toISOString(),
-            windowDays: daysToInclude,
         }
     },
-}
-
-const volumeSliceStart = (totalLength: number, window: number): number => {
-    if (window >= totalLength) {
-        return 0
-    }
-
-    return totalLength - window
 }
 
 export async function POST(req: Request) {

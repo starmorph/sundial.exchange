@@ -34,8 +34,13 @@ export function SundialChatInterface() {
   const [input, setInput] = useState("")
 
   const transport = useMemo(
-    () => new DefaultChatTransport({ api: "/api/chat" }),
-    [],
+    () => new DefaultChatTransport({
+      api: "/api/chat",
+      body: {
+        walletAddress: publicKey?.toBase58() || null,
+      },
+    }),
+    [publicKey],
   )
 
   const { messages, sendMessage, status, error } = useChat({

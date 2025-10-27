@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { formatToolName } from "@/lib/ai/utils"
 import { cn } from "@/lib/utils"
 import { useChat, type UIMessage } from "@ai-sdk/react"
 import { useWallet } from '@solana/wallet-adapter-react'
@@ -18,21 +19,12 @@ import { DefaultChatTransport } from "ai"
 import { Send, Sun } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
-const formatToolName = (type: string): string => {
-  const toolKey = type.startsWith("tool-") ? type.substring(5) : type
-  return toolKey
-    .split("-")
-    .filter(Boolean)
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(" ")
-}
-
 export function SundialChatInterface() {
   const { connected, publicKey } = useWallet()
   const isConnected = connected && publicKey !== null
-
   const [input, setInput] = useState("")
 
+  // USER MEMOS, STATE, USE-EFFECT, SETUP 
   const transport = useMemo(
     () => new DefaultChatTransport({
       api: "/api/chat",

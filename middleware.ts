@@ -572,6 +572,11 @@ export async function middleware(request: NextRequest) {
                 error: settlement.error,
             })
 
+            if (!settlement.success) {
+                console.warn("[x402] Settlement failed, returning 402:", settlement.error)
+                return create402Response(request, priceUsd)
+            }
+
             // Continue to the API route
             const response = NextResponse.next()
 

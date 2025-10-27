@@ -69,7 +69,7 @@ function getEndpointPriceUsd(pathname: string): number {
         return 10
     }
 
-    if (normalized.startsWith("/api/pools/") && normalized.endsWith("/analytics")) {
+    if (normalized === "/api/pools/analytics") {
         return POOL_ANALYTICS_PRICE_USD
     }
 

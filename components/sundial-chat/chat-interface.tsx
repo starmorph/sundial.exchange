@@ -18,6 +18,15 @@ import { DefaultChatTransport } from "ai"
 import { ImageIcon, Send, Sun } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
+const formatToolName = (type: string): string => {
+  const toolKey = type.startsWith("tool-") ? type.substring(5) : type
+  return toolKey
+    .split("-")
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ")
+}
+
 export function SundialChatInterface() {
   const { connected, publicKey } = useWallet()
   const isConnected = connected && publicKey !== null
@@ -150,19 +159,23 @@ export function SundialChatInterface() {
                     )}
                   </div>
 
-                  {toolParts.map((part) => (
-                    <Tool key={part.toolCallId} defaultOpen>
-                      <ToolHeader
-                        title="DEX Overview Payment"
-                        state={part.state}
-                        type={part.type}
-                      />
-                      <ToolContent>
-                        <ToolInput input={part.input ?? {}} />
-                        <ToolOutput errorText={part.errorText} output={part.output} />
-                      </ToolContent>
-                    </Tool>
-                  ))}
+                  {toolParts.map((part) => {
+                    const toolName = formatToolName(part.type)
+
+                    return (
+                      <Tool key={part.toolCallId} defaultOpen>
+                        <ToolHeader
+                          title={toolName}
+                          state={part.state}
+                          type={part.type}
+                        />
+                        <ToolContent>
+                          <ToolInput input={part.input ?? {}} />
+                          <ToolOutput errorText={part.errorText} output={part.output} />
+                        </ToolContent>
+                      </Tool>
+                    )
+                  })}
                 </div>
               )
             })}

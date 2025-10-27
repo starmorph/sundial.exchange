@@ -11,7 +11,7 @@ export async function POST(req: Request) {
             system: "You are Sundial, a Solana-focused AI assistant. Keep responses concise, helpful, and refer to x402 payments when relevant.",
         })
 
-        return stream.toDataStreamResponse()
+        return stream.toTextStreamResponse()
     } catch (error) {
         console.error("[CHAT] Error:", error)
         return new Response("Chat error", { status: 500 })

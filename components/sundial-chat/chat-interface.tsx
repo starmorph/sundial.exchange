@@ -6,21 +6,27 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { useChat, type UIMessage } from "@ai-sdk/react"
 import { useWallet } from '@solana/wallet-adapter-react'
+import { DefaultChatTransport } from "ai"
 import { ImageIcon, Send, Sun } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 export function SundialChatInterface() {
   const { connected, publicKey } = useWallet()
   const isConnected = connected && publicKey !== null
 
-  const [input, setInput] = useState('')
+  const [input, setInput] = useState("")
 
-  const { messages, sendMessage, regenerate, status, error } = useChat({
-    api: "/api/chat",
+  const transport = useMemo(
+    () => new DefaultChatTransport({ api: "/api/chat" }),
+    [],
+  )
+
+  const { messages, sendMessage, status, error } = useChat({
+    transport,
     onError: (error: Error) => {
       console.error("[v0] Chat error:", error)
     },
-    onFinish: ({ message }: { message: UIMessage }) => {
+    onFinish: ({ message }) => {
       console.log("[v0] Chat finished:", message)
     },
     onToolCall: ({ toolCall }) => {
@@ -34,13 +40,13 @@ export function SundialChatInterface() {
     }
   }, [error])
 
-  const isLoading = status === 'submitted' || status === 'streaming'
+  const isLoading = status === "submitted" || status === "streaming"
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || !isConnected) return
     sendMessage({ text: input })
-    setInput('')
+    setInput("")
   }
 
   return (
@@ -116,7 +122,12 @@ export function SundialChatInterface() {
                       : "bg-card text-card-foreground border border-border",
                   )}
                 >
-                  <p className="text-sm leading-relaxed">{(message.parts?.[0] as { text: string })?.text || ''}</p>
+                  <p className="text-sm leading-relaxed">
+                    {message.parts
+                      .filter((part): part is { type: "text"; text: string } => part.type === "text")
+                      .map((part) => part.text)
+                      .join(" ")}
+                  </p>
                 </div>
                 {message.role === "user" && (
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
@@ -140,13 +151,6 @@ export function SundialChatInterface() {
                 </div>
               </div>
             )}
-            {messages.length > 0 && !isLoading && messages[messages.length - 1]?.role === "assistant" && (
-              <div className="flex justify-center">
-                <Button variant="ghost" size="sm" onClick={() => regenerate()} className="text-muted-foreground hover:text-foreground">
-                  Regenerate response
-                </Button>
-              </div>
-            )}
           </div>
         </ScrollArea>
 
@@ -155,7 +159,7 @@ export function SundialChatInterface() {
             <div className="flex gap-2">
               <Input
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(event) => setInput(event.target.value)}
                 placeholder={
                   isConnected ? "Ask me anything or request an image..." : "Connect wallet to start chatting..."
                 }

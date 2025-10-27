@@ -1,6 +1,8 @@
 import { createOpenAI } from "@ai-sdk/openai"
 import { convertToModelMessages, streamText } from "ai"
 
+import { createDexOverviewTool } from "@/lib/tools/dex-overview"
+
 export async function POST(req: Request) {
     try {
         const apiKey = process.env.OPENAI_API_KEY
@@ -16,7 +18,11 @@ export async function POST(req: Request) {
         const stream = await streamText({
             model: openai("gpt-4o-mini"),
             messages: modelMessages,
-            system: "You are Sundial, a Solana-focused AI assistant. Keep responses concise, helpful, and refer to x402 payments when relevant.",
+            system:
+                "You are Sundial, a Solana-focused AI assistant. Keep responses concise, helpful, and refer to x402 payments when relevant.",
+            tools: {
+                getDexOverview: createDexOverviewTool(),
+            },
         })
 
         return stream.toUIMessageStreamResponse()

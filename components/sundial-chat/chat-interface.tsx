@@ -1,11 +1,19 @@
 "use client"
 
+import {
+  Tool,
+  ToolContent,
+  ToolHeader,
+  ToolInput,
+  ToolOutput,
+} from "@/components/ai-elements/tool"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { useChat, type UIMessage } from "@ai-sdk/react"
 import { useWallet } from '@solana/wallet-adapter-react'
+import type { ToolUIPart, UITools } from "ai"
 import { DefaultChatTransport } from "ai"
 import { ImageIcon, Send, Sun } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
@@ -53,7 +61,7 @@ export function SundialChatInterface() {
     <>
       <div className="flex h-full flex-col">
         <ScrollArea className="flex-1 px-4 py-6">
-          <div className="mx-auto max-w-3xl space-y-6">
+          <div className="mx-auto max-w-3xl space-y-6 pt-8 pb-10">
             {messages.length === 0 && (
               <div className="flex h-[60vh] flex-col items-center justify-center text-center">
                 <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/20 border border-primary/30">
@@ -104,38 +112,60 @@ export function SundialChatInterface() {
               </div>
             )}
 
-            {messages.map((message: UIMessage) => (
-              <div
-                key={message.id}
-                className={cn("flex gap-3", message.role === "user" ? "justify-end" : "justify-start")}
-              >
-                {message.role === "assistant" && (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
-                    <Sun className="h-4 w-4 text-primary-foreground" />
+            {messages.map((message: UIMessage) => {
+              const toolParts = message.parts.filter((part): part is ToolUIPart<UITools> => part.type.startsWith("tool-"))
+
+              return (
+                <div key={message.id} className="space-y-3">
+                  <div
+                    className={cn(
+                      "flex gap-3",
+                      message.role === "user" ? "justify-end" : "justify-start",
+                    )}
+                  >
+                    {message.role === "assistant" && (
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
+                        <Sun className="h-4 w-4 text-primary-foreground" />
+                      </div>
+                    )}
+                    <div
+                      className={cn(
+                        "max-w-[80%] rounded-2xl px-5 py-4 shadow-sm",
+                        message.role === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "border border-border bg-card/90 text-foreground",
+                      )}
+                    >
+                      <p className="text-base leading-6 whitespace-pre-wrap">
+                        {message.parts
+                          .filter((part): part is { type: "text"; text: string } => part.type === "text")
+                          .map((part) => part.text)
+                          .join(" ")}
+                      </p>
+                    </div>
+                    {message.role === "user" && (
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <span className="text-sm font-medium">You</span>
+                      </div>
+                    )}
                   </div>
-                )}
-                <div
-                  className={cn(
-                    "max-w-[80%] rounded-2xl px-4 py-3",
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card text-card-foreground border border-border",
-                  )}
-                >
-                  <p className="text-sm leading-relaxed">
-                    {message.parts
-                      .filter((part): part is { type: "text"; text: string } => part.type === "text")
-                      .map((part) => part.text)
-                      .join(" ")}
-                  </p>
+
+                  {toolParts.map((part) => (
+                    <Tool key={part.toolCallId} defaultOpen>
+                      <ToolHeader
+                        title="DEX Overview Payment"
+                        state={part.state}
+                        type={part.type}
+                      />
+                      <ToolContent>
+                        <ToolInput input={part.input ?? {}} />
+                        <ToolOutput errorText={part.errorText} output={part.output} />
+                      </ToolContent>
+                    </Tool>
+                  ))}
                 </div>
-                {message.role === "user" && (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-                    <span className="text-sm font-medium">You</span>
-                  </div>
-                )}
-              </div>
-            ))}
+              )
+            })}
 
             {isLoading && (
               <div className="flex gap-3">

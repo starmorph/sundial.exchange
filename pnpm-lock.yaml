@@ -6769,11 +6769,6 @@ packages:
     peerDependencies:
       react: '>= 0.14.0'
 
-  refractor@4.9.0:
-    resolution: {integrity: sha512-M2wQ0dF+yUt318ZvF1QI/8d4LTwBOxJznSKETuGqfRXFaVR7PTMC0q68BAIXcEiO4P4Zw5fxrjGuwGVZMG4WUw==}
-    peerDependencies:
-      hastscript: ^7.0.0
-
   react@19.2.0:
     resolution: {integrity: sha512-tmbWg6W31tQLeB5cdIBOicJDJRR2KzXsV7uSK9iNfLWQ5bIZfxuPEHp7M8wiHyHnn0DD1i7w3Zmin0FtkrwoCQ==}
     engines: {node: '>=0.10.0'}

@@ -109,7 +109,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /api/pools/{id}/analytics:
+  /api/pools/analytics:
     get:
       tags: [dex]
       operationId: getPoolAnalytics
@@ -119,12 +119,12 @@ paths:
 
         Pricing: requires a 0.001 USDC x402 payment on Solana per request.
       parameters:
-        - in: path
-          name: id
+        - in: query
+          name: poolId
           required: true
+          description: Solana pool address (base58)
           schema:
             type: string
-          description: Pool address (base58)
       responses:
         "200":
           description: Pool analytics payload

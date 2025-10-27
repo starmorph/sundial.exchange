@@ -2,17 +2,12 @@ import { NextResponse } from "next/server"
 
 import { getPoolAnalytics } from "@/lib/jupiter-ultra"
 
-type RouteParams = {
-    params: {
-        id: string
-    }
-}
-
-export async function GET(request: Request, { params }: RouteParams) {
-    const poolId = params.id
+export async function GET(request: Request) {
+    const url = new URL(request.url)
+    const poolId = url.searchParams.get("poolId")
 
     if (!poolId) {
-        return NextResponse.json({ error: "Pool id is required" }, { status: 400 })
+        return NextResponse.json({ error: "poolId query parameter is required" }, { status: 400 })
     }
 
     try {
@@ -42,7 +37,13 @@ export async function GET(request: Request, { params }: RouteParams) {
                 input: {
                     type: "http",
                     method: "GET",
-                    path: `/api/pools/${poolId}/analytics`,
+                    queryParams: {
+                        poolId: {
+                            type: "string",
+                            required: true,
+                            description: "Solana pool address (base58)",
+                        },
+                    },
                 },
                 output: {
                     type: "object",

@@ -1,5 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai"
-import { convertToModelMessages, streamText } from "ai"
+import { convertToModelMessages, streamText, type UIMessage } from "ai"
 import { z } from "zod"
 
 import { logAssistantResponse, logChatError, logUserMessage } from "@/lib/ai-message-logger"
@@ -71,16 +71,23 @@ export async function POST(req: Request) {
         const openai = createOpenAI({ apiKey })
 
         const body = await req.json()
-        const { messages, walletAddress: wallet } = body
+        const { messages, walletAddress: wallet } = body as {
+            messages: UIMessage[]
+            walletAddress?: string
+        }
 
         walletAddress = wallet || null
         const modelMessages = convertToModelMessages(messages)
 
         // Extract the latest user message for logging
-        const lastUserMessage = messages
-            .filter((m: any) => m.role === "user")
-            .pop()
-        userMessage = lastUserMessage?.text || lastUserMessage?.content || ""
+        const lastUserMessage = messages.filter((m) => m.role === "user").pop()
+
+        if (lastUserMessage) {
+            const textParts = lastUserMessage.parts
+                .filter((p) => p.type === "text")
+                .map((p) => p.text)
+            userMessage = textParts.join(" ")
+        }
 
         // Log the incoming user message
         logUserMessage(walletAddress, userMessage)

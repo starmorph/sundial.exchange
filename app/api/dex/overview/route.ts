@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
-import { getDexProtocolSummary } from "@/lib/defillama-volumes"
+import { getDexProtocolSummary, getSolanaDexProtocols, getSolanaDexVolumes } from "@/lib/defillama-volumes"
 
 const MAX_DEX_QUERIES = 3
 const PRICE_USDC = 0.01
@@ -94,14 +94,47 @@ export async function POST(req: NextRequest) {
  * GET method returns pricing info without requiring payment
  */
 export async function GET() {
-    return NextResponse.json({
-        endpoint: "/api/dex/overview",
-        method: "POST",
-        priceUSDC: PRICE_USDC,
-        maxProtocols: MAX_DEX_QUERIES,
-        paymentRequired: true,
-        paymentProtocol: "x402",
-        network: "solana",
-        description: "Get real-time DEX protocol analytics with x402 micropayment",
-    })
+    try {
+        const [protocols, volumes] = await Promise.all([
+            getSolanaDexProtocols(),
+            getSolanaDexVolumes(),
+        ])
+
+        return NextResponse.json(
+            {
+                endpoint: "/api/dex/overview",
+                method: "POST",
+                priceUSDC: PRICE_USDC,
+                maxProtocols: MAX_DEX_QUERIES,
+                paymentRequired: true,
+                paymentProtocol: "x402",
+                network: "solana",
+                description: "Get real-time DEX protocol analytics with x402 micropayment",
+                protocols,
+                volumes,
+            },
+            {
+                headers: {
+                    "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+                },
+            },
+        )
+    } catch (error) {
+        console.error("[DEX_OVERVIEW] GET error:", error)
+        return NextResponse.json(
+            {
+                endpoint: "/api/dex/overview",
+                method: "POST",
+                priceUSDC: PRICE_USDC,
+                maxProtocols: MAX_DEX_QUERIES,
+                paymentRequired: true,
+                paymentProtocol: "x402",
+                network: "solana",
+                description: "Get real-time DEX protocol analytics with x402 micropayment",
+                protocols: [],
+                volumes: [],
+            },
+            { status: 200 },
+        )
+    }
 }

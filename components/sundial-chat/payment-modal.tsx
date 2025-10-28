@@ -20,7 +20,9 @@ interface SundialPaymentModalProps {
   onOpenChange: (open: boolean) => void
   amount: number
   toolName: string
-  onPaymentComplete?: () => void
+  toolCallId?: string
+  toolArgs?: any
+  onPaymentComplete?: (data: any) => void
 }
 
 export function SundialPaymentModal({
@@ -28,29 +30,84 @@ export function SundialPaymentModal({
   onOpenChange,
   amount,
   toolName,
+  toolCallId,
+  toolArgs,
   onPaymentComplete,
 }: SundialPaymentModalProps) {
   const [dontShowAgain, setDontShowAgain] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-  const { publicKey, connected } = useWallet()
+  const { publicKey, connected, signTransaction } = useWallet()
 
   const handleConfirm = async () => {
-    if (!publicKey) return
+    if (!publicKey || !signTransaction) return
 
     setIsProcessing(true)
 
     try {
-      // Mock Solana payment - in production, use @solana/web3.js to send USDC
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      console.log("[Payment] Starting x402 payment flow...")
+      console.log("[Payment] Amount:", amount, "USDC")
+      console.log("[Payment] Tool args:", toolArgs)
+
+      // Use x402-solana client (same as pool analytics which works)
+      const { createX402Client } = await import("x402-solana")
+
+      const rpcUrl = process.env.NEXT_PUBLIC_HELIUS_API_KEY
+        ? `https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`
+        : undefined
+
+      console.log("[Payment] Creating x402 client...")
+      const client = createX402Client({
+        wallet: {
+          address: publicKey.toString(),
+          signTransaction,
+        },
+        network: "solana",
+        maxPaymentAmount: BigInt(Math.ceil(amount * 2 * 1_000_000)),
+        rpcUrl,
+      })
+
+      // Get endpoint
+      const endpoint = toolName === "dex-overview-paid"
+        ? "/api/dex/overview"
+        : "/api/dex/overview"
+
+      // Use localhost in dev, production domain in prod
+      const baseUrl = process.env.NODE_ENV === "production"
+        ? "https://sundial.exchange"
+        : window.location.origin
+
+      console.log("[Payment] Making x402 fetch to:", `${baseUrl}${endpoint}`)
+
+      // Use client.fetch() - it handles 402, creates tx, signs, and retries
+      const response = await client.fetch(`${baseUrl}${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify(toolArgs ?? {}),
+      })
+
+      console.log("[Payment] Got response, status:", response.status)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("[Payment] API error:", errorText)
+        throw new Error(`API returned ${response.status}: ${errorText.substring(0, 100)}`)
+      }
+
+      const data = await response.json()
+      console.log("[Payment] Success! Data:", data)
 
       if (dontShowAgain) {
         localStorage.setItem("hidePaymentModal", "true")
       }
 
       onOpenChange(false)
-      onPaymentComplete?.()
+      onPaymentComplete?.(data)
     } catch (error) {
-      console.error("[v0] Payment error:", error)
+      console.error("[Payment] Error:", error)
+      alert(`Payment failed: ${error instanceof Error ? error.message : "Unknown error"}`)
     } finally {
       setIsProcessing(false)
     }

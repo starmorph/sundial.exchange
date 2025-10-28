@@ -7,9 +7,11 @@ import {
   ToolInput,
   ToolOutput,
 } from "@/components/ai-elements/tool"
+import { SundialPaymentModal } from "@/components/sundial-chat/payment-modal"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { toolMetadata } from "@/lib/ai/tools"
 import { formatToolName } from "@/lib/ai/utils"
 import { cn } from "@/lib/utils"
 import { useChat, type UIMessage } from "@ai-sdk/react"
@@ -17,12 +19,80 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import type { ToolUIPart, UITools } from "ai"
 import { DefaultChatTransport } from "ai"
 import { Send, Sun } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { toast } from "sonner"
 
 export function SundialChatInterface() {
   const { connected, publicKey } = useWallet()
+  const wallet = useWallet()
   const isConnected = connected && publicKey !== null
   const [input, setInput] = useState("")
+
+  // Payment modal state
+  const [paymentModal, setPaymentModal] = useState<{
+    open: boolean
+    toolName: string
+    amount: number
+    toolCallId?: string
+    toolArgs?: any
+  }>({
+    open: false,
+    toolName: "",
+    amount: 0,
+  })
+
+  // Store pending tool data
+  const [pendingToolData, setPendingToolData] = useState<Map<string, any>>(new Map())
+
+  const clearPendingToolData = useCallback((toolCallId: string) => {
+    setPendingToolData((prev) => {
+      if (!prev.has(toolCallId)) {
+        return prev
+      }
+      const next = new Map(prev)
+      next.delete(toolCallId)
+      return next
+    })
+  }, [])
+
+  const metadataRequiresPayment = useCallback((toolType: string) => {
+    const toolName = toolType.replace(/^tool-/, "") as keyof typeof toolMetadata
+    return Boolean(toolMetadata[toolName]?.requiresPayment)
+  }, [])
+
+  const extractToolArgs = useCallback((toolCall: unknown) => {
+    if (!toolCall || typeof toolCall !== "object") {
+      return {}
+    }
+
+    const candidate = (toolCall as Record<string, unknown>).args
+      ?? (toolCall as Record<string, unknown>).input
+      ?? (toolCall as Record<string, unknown>).parameters
+
+    const fallback = (toolCall as Record<string, unknown>).arguments
+
+    if (candidate && typeof candidate === "string") {
+      try {
+        return JSON.parse(candidate)
+      } catch {
+        return {}
+      }
+    }
+
+    if (!candidate && typeof fallback === "string") {
+      try {
+        return JSON.parse(fallback)
+      } catch {
+        return {}
+      }
+    }
+
+    if (candidate && typeof candidate === "object") {
+      return candidate
+    }
+
+    return {}
+  }, [])
 
   // USER MEMOS, STATE, USE-EFFECT, SETUP 
   const transport = useMemo(
@@ -38,13 +108,33 @@ export function SundialChatInterface() {
   const { messages, sendMessage, status, error } = useChat({
     transport,
     onError: (error: Error) => {
-      console.error("[v0] Chat error:", error)
+      console.error("[Chat] Error:", error)
+      toast.error("Chat error: " + error.message)
     },
     onFinish: ({ message }) => {
-      console.log("[v0] Chat finished:", message)
+      console.log("[Chat] Finished:", message)
     },
     onToolCall: ({ toolCall }) => {
-      console.log("Tool called:", toolCall)
+      console.log("[Chat] Tool called:", toolCall)
+
+      // Check if tool requires payment
+      const metadata = toolMetadata[toolCall.toolName as keyof typeof toolMetadata]
+      if (metadata?.requiresPayment && metadata.priceUSDC) {
+        console.log("[Chat] Payment required for:", toolCall.toolName)
+
+        const toolArgs = extractToolArgs(toolCall)
+
+        clearPendingToolData(toolCall.toolCallId)
+
+        // Show payment modal
+        setPaymentModal({
+          open: true,
+          toolName: toolCall.toolName,
+          amount: metadata.priceUSDC,
+          toolCallId: toolCall.toolCallId,
+          toolArgs,
+        })
+      }
     }
   })
 
@@ -68,8 +158,29 @@ export function SundialChatInterface() {
     sendMessage({ text: message })
   }
 
+  const handlePaymentComplete = useCallback(async (data: any) => {
+    console.log("[Chat] Payment completed, got data:", data)
+    toast.success(`Payment successful! Data received.`)
+
+    if (paymentModal.toolCallId) {
+      setPendingToolData((prev) => new Map(prev).set(paymentModal.toolCallId!, data))
+    }
+
+    setPaymentModal(prev => ({ ...prev, open: false, toolCallId: undefined, toolArgs: undefined }))
+  }, [paymentModal.toolCallId])
+
   return (
     <>
+      <SundialPaymentModal
+        open={paymentModal.open}
+        onOpenChange={(open) => setPaymentModal(prev => ({ ...prev, open }))}
+        amount={paymentModal.amount}
+        toolName={paymentModal.toolName}
+        toolCallId={paymentModal.toolCallId}
+        toolArgs={paymentModal.toolArgs}
+        onPaymentComplete={handlePaymentComplete}
+      />
+
       <div className="flex h-full flex-col overflow-hidden">
         <ScrollArea className="flex-1 overflow-y-auto px-4 py-6">
           <div className="mx-auto max-w-3xl space-y-6 pt-8 pb-6">
@@ -165,17 +276,35 @@ export function SundialChatInterface() {
 
                   {toolParts.map((part) => {
                     const toolName = formatToolName(part.type)
+                    const isPaidTool = metadataRequiresPayment(part.type)
+                    const pendingResult = part.toolCallId ? pendingToolData.get(part.toolCallId) : undefined
+                    const displayOutput = pendingResult ?? part.output
+                    const isAwaitingPayment = isPaidTool && !pendingResult
 
                     return (
-                      <Tool key={part.toolCallId} defaultOpen>
+                      <Tool
+                        key={part.toolCallId ?? toolName}
+                        defaultOpen={!isAwaitingPayment}
+                        data-awaiting-payment={isAwaitingPayment ? "true" : undefined}
+                        disabled={isAwaitingPayment}
+                      >
                         <ToolHeader
                           title={toolName}
-                          state={part.state}
+                          state={isAwaitingPayment ? "pending" : part.state}
                           type={part.type}
                         />
                         <ToolContent>
                           <ToolInput input={part.input ?? {}} />
-                          <ToolOutput errorText={part.errorText} output={part.output} />
+                          {isAwaitingPayment ? (
+                            <div className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm">
+                              <p className="font-medium text-primary">Awaiting payment confirmation…</p>
+                              <p className="text-muted-foreground">
+                                Complete the Solana transaction in the payment modal to receive results.
+                              </p>
+                            </div>
+                          ) : (
+                            <ToolOutput errorText={part.errorText} output={displayOutput} />
+                          )}
                         </ToolContent>
                       </Tool>
                     )

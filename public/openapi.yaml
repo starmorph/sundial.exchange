@@ -1,0 +1,800 @@
+openapi: 3.1.0
+info:
+  title: Sundial Exchange API
+  version: 1.1.4
+  description: |
+    Real-time Solana DEX analytics API powered by x402 payments.
+
+    ## Overview
+
+    Access comprehensive Solana DEX data including:
+    - 📊 Real-time statistics (TPS, SOL price, TVL)
+    - 🔥 Trending tokens with 24h price changes
+    - 🏦 Protocol summaries and volumes (Raydium, Orca, Meteora, etc.)
+    - 📈 Historical volume data across all major Solana DEXs
+    - 🤖 **Premium AI forecasts** synthesised from DeFiLlama market data (requires $10 x402 payment)
+
+    *disclaimer:* this api is not yet production ready and is subject to change. There may be data inaccuracies or missing data e.g. retrieving 7day volume from a specific dex may not be available.
+
+    ## Payment Gateway (x402 Protocol)
+
+    External API requests require a **$0.10 USDC** payment via the [x402 protocol](https://docs.cdp.coinbase.com/x402/core-concepts/how-it-works). The `/api/premium-insight` endpoint is priced at **$10.00 USDC** to reflect the additional AI inference cost and premium analytics payload.
+
+    | Endpoint | Price (USDC) |
+    | --- | ---: |
+    | `/api/stats` | 0.10 |
+    | `/api/trending` | 0.10 |
+    | `/api/dex/*` | 0.10 |
+    | `/api/pools/{id}/analytics` | 0.001 |
+    | `/api/premium-insight` | **10.00** |
+
+    ### Supported Networks
+
+    Clients can choose to pay on either:
+    - **Base** (Ethereum L2) - USDC contract: `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
+    - **Solana** - USDC contract: `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`
+
+    Payments are processed through the [PayAI facilitator](https://facilitator.payai.network/) with **zero gas fees** for both buyers and merchants.
+
+    ### Payment Recipients
+
+    - **Base**: `0xde7ae42f066940c50efeed40fd71dde630148c0a`
+    - **Solana**: `Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K`
+
+    ### Free Access
+
+    The following origins are exempt from payment requirements:
+    - `http://localhost:3000` (development)
+    - `https://sundial.exchange` (production)
+    - `https://www.sundial.exchange` (production with www)
+
+    Users browsing the Sundial Exchange website get free API access!
+  contact:
+    name: Sundial Exchange
+    url: https://sundial.exchange
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+externalDocs:
+  description: Complete API documentation and guides
+  url: https://github.com/dylanboudro/sundial.exchange
+servers:
+  - url: https://sundial.exchange
+    description: Production
+  - url: http://localhost:3000
+    description: Local development
+  - url: /
+    description: Relative to deployment origin
+tags:
+  - name: dex
+    description: DEX data endpoints
+  - name: stats
+    description: Platform and market stats
+  - name: trending
+    description: Trending token data
+  - name: logging
+    description: Event ingestion/logging
+  - name: premium
+    description: Premium paid endpoints for automated due diligence and stress-testing bots
+paths:
+  /api/dex/overview:
+    get:
+      tags: [dex]
+      operationId: getDexOverview
+      summary: Get Solana DEX overview
+      description: Returns Solana DEX protocol summaries and aggregated volume timeline for Solana DEXs.
+      responses:
+        "200":
+          description: Overview data
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [protocols, volumes]
+                properties:
+                  protocols:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DexProtocolSummary"
+                  volumes:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DexVolumeData"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/pools/analytics:
+    get:
+      tags: [dex]
+      operationId: getPoolAnalytics
+      summary: Get liquidity and volume analytics for a specific Solana pool
+      description: |
+        Returns time-sensitive liquidity, fee, and reserve metrics for a given Solana pool sourced from the Jupiter Ultra API.
+
+        Pricing: requires a 0.001 USDC x402 payment on Solana per request.
+      parameters:
+        - in: query
+          name: poolId
+          required: true
+          description: Solana pool address (base58)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pool analytics payload
+          headers:
+            X-402-Output-Schema:
+              description: JSON metadata describing price and response schema for x402 clients.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PoolAnalyticsResponse"
+        "400":
+          description: Missing pool id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
+        "502":
+          description: Upstream Jupiter API error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/dex/protocol/{slug}:
+    get:
+      tags: [dex]
+      operationId: getDexProtocolBySlug
+      summary: Get DEX protocol details
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+          description: Protocol slug (e.g. "raydium")
+      responses:
+        "200":
+          description: Protocol details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DexProtocolSummary"
+        "400":
+          description: Missing or invalid slug
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/stats:
+    get:
+      tags: [stats]
+      operationId: getStats
+      summary: Get near real-time platform stats
+      description: Returns TPS, SOL price, TVL, and 24h volume plus 24h change percentages when available.
+      responses:
+        "200":
+          description: Stats payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsResponse"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
+
+  /api/trending:
+    get:
+      tags: [trending]
+      operationId: getTrendingTokens
+      summary: Get trending token pricing data
+      parameters:
+        - in: query
+          name: hours
+          required: false
+          description: Lookback window in hours (> 0). Defaults to 24.
+          schema:
+            type: integer
+            minimum: 1
+            default: 24
+      responses:
+        "200":
+          description: Trending token series
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NormalizedTrendingToken"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/swap-log:
+    post:
+      tags: [logging]
+      operationId: postSwapLog
+      summary: Log a swap event
+      description: Accepts arbitrary JSON payloads to be logged server-side. Returns no content.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SwapEventPayload"
+      responses:
+        "204":
+          description: Logged successfully, no content
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
+
+  /api/premium-insight:
+    get:
+      tags: [premium]
+      operationId: getPremiumInsight
+      summary: Generate premium Solana market forecast (AI + DeFiLlama data)
+      description: |
+        Produces a high-value, AI-generated 24–48 hour Solana market outlook derived from DeFiLlama token trends and liquidity signals. Ideal for automated testers evaluating premium x402 integrations, MEV defense, or treasury risk models.
+
+        The response includes:
+        - Aggregated sentiment on SOL momentum (bullish/bearish & projected range)
+        - Top trending Solana tokens with catalyst commentary
+        - Notable whale/liquidity anomalies observed in the last 24h
+
+        **Pricing:** Requires a $10.00 USDC x402 payment (Base or Solana) per invocation.
+        **x402 canonical price:** `10000000` (USDC has 6 decimals, 10.00 → 10,000,000)
+
+        > **Note for human users:** This feed is experimental and optimised for autonomous QA clients. Use at your own discretion.
+      responses:
+        "200":
+          description: Premium AI forecast payload
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [forecast, generatedAt]
+                properties:
+                  forecast:
+                    type: string
+                    description: AI-authored summary of near-term Solana market expectations
+                  generatedAt:
+                    type: string
+                    format: date-time
+                    description: UTC timestamp when the forecast was generated
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
+        "500":
+          description: Server error while generating forecast
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  parameters:
+    XPaymentHeader:
+      name: X-PAYMENT
+      in: header
+      required: false
+      description: Base64-encoded x402 payment proof issued by the PayAI facilitator.
+      schema:
+        type: string
+  responses:
+    PaymentRequired:
+      description: Payment required to access this resource. Contains x402 payment instructions.
+      headers:
+        X-PAYMENT-REQUIRED:
+          schema:
+            type: string
+            enum: ["true"]
+          description: Indicates payment is required
+        X-PAYMENT-SCHEME:
+          schema:
+            type: string
+            enum: ["x402"]
+          description: Payment scheme identifier
+        X-PAYMENT-RESPONSE:
+          description: Base64-encoded JSON settlement details returned after successful payment verification.
+          schema:
+            type: string
+            example: "eyJzdWNjZXNzIjp0cnVlLCJ0eEhhc2giOiIweGFhYSIsIm5ldHdvcmtJZCI6ImJhc2UiLCJ0aW1lc3RhbXAiOiIyMDI1LTEwLTI2VDA2OjAwOjAwWiJ9"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/X402Challenge"
+          example:
+            x402Version: 1
+            error: "X-PAYMENT header is required"
+            accepts:
+              - scheme: "exact"
+                network: "base"
+                maxAmountRequired: "100000"
+                resource: "https://www.sundial.exchange/api/stats"
+                description: "Access /api/stats - Sundial Exchange API (Base)"
+                mimeType: "application/json"
+                payTo: "0xde7ae42f066940c50efeed40fd71dde630148c0a"
+                maxTimeoutSeconds: 300
+                asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                outputSchema:
+                  input:
+                    type: "http"
+                    method: "GET"
+                  output:
+                    type: "object"
+                    properties:
+                      tps:
+                        type: "number"
+                        description: "Transactions per second"
+                      solPriceUsd:
+                        type: "number"
+                        description: "SOL price in USD"
+                      tvlUsd:
+                        type: "number"
+                        description: "Total value locked in USD"
+                      volume24hUsd:
+                        type: "number"
+                        description: "24h volume in USD"
+                      solChange24hPct:
+                        type: "number"
+                        description: "24h SOL price change %"
+                      tvlChange24hPct:
+                        type: "number"
+                        description: "24h TVL change %"
+                      volume24hChangePct:
+                        type: "number"
+                        description: "24h volume change %"
+                extra:
+                  name: "USD Coin"
+                  version: "2"
+              - scheme: "exact"
+                network: "solana"
+                maxAmountRequired: "100000"
+                resource: "https://www.sundial.exchange/api/stats"
+                description: "Access /api/stats - Sundial Exchange API (Solana)"
+                mimeType: "application/json"
+                payTo: "Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K"
+                maxTimeoutSeconds: 300
+                asset: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+                outputSchema:
+                  input:
+                    type: "http"
+                    method: "GET"
+                  output:
+                    type: "object"
+                    properties:
+                      tps:
+                        type: "number"
+                        description: "Transactions per second"
+                      solPriceUsd:
+                        type: "number"
+                        description: "SOL price in USD"
+                      tvlUsd:
+                        type: "number"
+                        description: "Total value locked in USD"
+                      volume24hUsd:
+                        type: "number"
+                        description: "24h volume in USD"
+                      solChange24hPct:
+                        type: "number"
+                        description: "24h SOL price change %"
+                      tvlChange24hPct:
+                        type: "number"
+                        description: "24h TVL change %"
+                      volume24hChangePct:
+                        type: "number"
+                        description: "24h volume change %"
+                extra:
+                  name: "USD Coin"
+                  version: "2"
+
+  schemas:
+    X402Challenge:
+      type: object
+      description: |
+        x402 payment challenge containing payment requirements.
+        The challenge includes options for both Base and Solana networks.
+        Clients can choose which network to use for payment.
+      required: [x402Version, error, accepts]
+      properties:
+        x402Version:
+          type: integer
+          enum: [1]
+          description: Version of x402 protocol
+        error:
+          type: string
+          example: "X-PAYMENT header is required"
+          description: Error message indicating payment is required
+        accepts:
+          type: array
+          description: Array of accepted payment methods (Base and Solana)
+          minItems: 2
+          maxItems: 2
+          items:
+            $ref: "#/components/schemas/X402PaymentMethod"
+
+    X402PaymentMethod:
+      type: object
+      description: Details of an accepted payment method
+      required: [scheme, network, maxAmountRequired, resource, payTo, asset]
+      properties:
+        scheme:
+          type: string
+          enum: ["exact"]
+          description: Payment scheme type
+        network:
+          type: string
+          enum: ["base", "solana"]
+          description: Blockchain network for payment (client chooses)
+        maxAmountRequired:
+          type: string
+          example: "100000"
+          description: Maximum payment amount in token smallest unit (USDC has 6 decimals, so 100000 = 0.10 USDC)
+        resource:
+          type: string
+          example: "http://localhost:3000/api/stats"
+          description: Full URL of the resource being accessed
+        description:
+          type: string
+          description: Human-readable payment description
+        mimeType:
+          type: string
+          example: "application/json"
+          description: MIME type of the resource
+        payTo:
+          type: string
+          oneOf:
+            - pattern: "^0x[a-fA-F0-9]{40}$"
+              description: Base recipient (Ethereum address)
+            - pattern: "^[1-9A-HJ-NP-Za-km-z]{32,44}$"
+              description: Solana recipient (Base58 address)
+          examples:
+            base: "0xde7ae42f066940c50efeed40fd71dde630148c0a"
+            solana: "Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K"
+          description: Recipient wallet address (format depends on network)
+        maxTimeoutSeconds:
+          type: integer
+          example: 300
+          description: Maximum time in seconds to complete payment
+        asset:
+          type: string
+          oneOf:
+            - pattern: "^0x[a-fA-F0-9]{40}$"
+              description: Base USDC contract (ERC-20)
+            - pattern: "^[1-9A-HJ-NP-Za-km-z]{32,44}$"
+              description: Solana USDC contract (SPL Token)
+          examples:
+            base: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+            solana: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+          description: USDC token contract address (format depends on network)
+        outputSchema:
+          type: object
+          description: |
+            Schema describing the input and output format per x402scan specification.
+            Allows x402scan to present a UI for invoking resources from within the app.
+          properties:
+            input:
+              type: object
+              description: HTTP request parameters
+              required: [type, method]
+              properties:
+                type:
+                  type: string
+                  enum: ["http"]
+                  description: Request type
+                method:
+                  type: string
+                  enum: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+                  description: HTTP method
+                bodyType:
+                  type: string
+                  enum:
+                    [
+                      "json",
+                      "form-data",
+                      "multipart-form-data",
+                      "text",
+                      "binary",
+                    ]
+                  description: Body content type (for POST/PUT/PATCH)
+                queryParams:
+                  type: object
+                  description: Query parameter definitions
+                  additionalProperties:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        description: Parameter type
+                      required:
+                        oneOf:
+                          - type: boolean
+                          - type: array
+                            items:
+                              type: string
+                        description: Whether parameter is required
+                      description:
+                        type: string
+                        description: Parameter description
+                      enum:
+                        type: array
+                        items:
+                          type: string
+                        description: Allowed values
+                bodyFields:
+                  type: object
+                  description: Body field definitions (for POST/PUT/PATCH)
+                  additionalProperties:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        description: Field type
+                      required:
+                        oneOf:
+                          - type: boolean
+                          - type: array
+                            items:
+                              type: string
+                        description: Whether field is required
+                      description:
+                        type: string
+                        description: Field description
+                      properties:
+                        type: object
+                        description: Nested object properties
+                headerFields:
+                  type: object
+                  description: Custom header field definitions
+                  additionalProperties:
+                    type: object
+            output:
+              type: object
+              description: Response structure definition
+              additionalProperties: true
+        extra:
+          type: object
+          description: Additional metadata
+          properties:
+            name:
+              type: string
+              example: "USD Coin"
+            version:
+              type: string
+              example: "2"
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    DexVolumeData:
+      type: object
+    PoolAnalyticsMetrics:
+      type: object
+      properties:
+        volume24hUsd:
+          type: number
+        volume7dUsd:
+          type: number
+        fees24hUsd:
+          type: number
+        tvlUsd:
+          type: number
+        liquidityUsd:
+          type: number
+        apr:
+          type: [number, "null"]
+        apy:
+          type: [number, "null"]
+
+    PoolReservesSnapshot:
+      type: object
+      properties:
+        baseSymbol:
+          type: string
+        quoteSymbol:
+          type: string
+        baseMint:
+          type: [string, "null"]
+        quoteMint:
+          type: [string, "null"]
+        baseAmount:
+          type: number
+        quoteAmount:
+          type: number
+
+    PoolAnalyticsResponse:
+      type: object
+      required:
+        [
+          poolId,
+          poolName,
+          metrics,
+          reserves,
+          priceImpactBps,
+          updatedAtUnix,
+          fetchedAt,
+        ]
+      properties:
+        poolId:
+          type: string
+        poolName:
+          type: string
+        metrics:
+          $ref: "#/components/schemas/PoolAnalyticsMetrics"
+        reserves:
+          $ref: "#/components/schemas/PoolReservesSnapshot"
+        priceImpactBps:
+          type: [number, "null"]
+        updatedAtUnix:
+          type: number
+        fetchedAt:
+          type: string
+          format: date-time
+        raw:
+          description: Raw upstream payload from Jupiter Ultra.
+          type: object
+          additionalProperties: true
+
+    ChainTvls:
+      type: object
+      additionalProperties:
+        type: number
+
+    Breakdown24h:
+      type: object
+      additionalProperties:
+        type: object
+        additionalProperties:
+          type: number
+
+    DexProtocolSummary:
+      type: object
+      properties:
+        name:
+          type: string
+        displayName:
+          type: string
+        disabled:
+          type: boolean
+        logo:
+          type: string
+        address:
+          type: string
+        url:
+          type: string
+        description:
+          type: string
+        audits:
+          type: string
+        category:
+          type: string
+        twitter:
+          type: string
+        audit_links:
+          type: array
+          items:
+            type: string
+        forkedFrom:
+          type: array
+          items:
+            type: string
+        gecko_id:
+          type: string
+        chains:
+          type: array
+          items:
+            type: string
+        module:
+          type: string
+        protocolType:
+          type: string
+        methodology:
+          type: string
+        latestFetchIsOk:
+          type: boolean
+        slug:
+          type: string
+        tvl:
+          type: number
+        chainTvls:
+          $ref: "#/components/schemas/ChainTvls"
+        change_1h:
+          type: number
+        change_1d:
+          type: number
+        change_7d:
+          type: number
+        fdv:
+          type: number
+        mcap:
+          type: number
+        total24h:
+          type: number
+        total48hto24h:
+          type: number
+        total7d:
+          type: number
+        total14dto7d:
+          type: number
+        total60dto30d:
+          type: number
+        total30d:
+          type: number
+        totalAllTime:
+          type: number
+        breakdown24h:
+          $ref: "#/components/schemas/Breakdown24h"
+
+    PriceHistoryPoint:
+      type: object
+      required: [timestamp, price]
+      properties:
+        timestamp:
+          type: number
+        price:
+          type: number
+
+    NormalizedTrendingToken:
+      type: object
+      required: [symbol, currentPrice, change24h, prices]
+      properties:
+        symbol:
+          type: string
+        currentPrice:
+          type: number
+        change24h:
+          type: number
+        prices:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceHistoryPoint"
+
+    StatsResponse:
+      type: object
+      properties:
+        tps:
+          type: [number, "null"]
+        solPriceUsd:
+          type: [number, "null"]
+        tvlUsd:
+          type: [number, "null"]
+        volume24hUsd:
+          type: [number, "null"]
+        solChange24hPct:
+          type: [number, "null"]
+        tvlChange24hPct:
+          type: [number, "null"]
+        volume24hChangePct:
+          type: [number, "null"]
+
+    SwapEventPayload:
+      type: object
+      description: Arbitrary JSON payload to log; shape is not validated server-side.
+      additionalProperties: true

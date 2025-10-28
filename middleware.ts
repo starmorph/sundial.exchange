@@ -21,6 +21,149 @@ const RETRYABLE_FACILITATOR_ERRORS = [
     "already known",
 ]
 
+type SupportedNetwork = "base" | "solana"
+
+const FACILITATOR_FEE_PAYER_CACHE_TTL_MS = 5 * 60 * 1000
+const facilitatorFeePayerCache = new Map<SupportedNetwork, { feePayer: string; expiresAt: number }>()
+
+function isSupportedNetworkGuard(network: string): network is SupportedNetwork {
+    return network === "base" || network === "solana"
+}
+
+async function getFacilitatorFeePayer(network: SupportedNetwork): Promise<string> {
+    const cached = facilitatorFeePayerCache.get(network)
+    if (cached && cached.expiresAt > Date.now()) {
+        return cached.feePayer
+    }
+
+    const response = await fetch(`${FACILITATOR_BASE_URL}/supported`)
+    if (!response.ok) {
+        throw new Error(`Failed to fetch facilitator supported networks: ${response.status}`)
+    }
+
+    const data = (await response.json()) as {
+        kinds?: Array<{ network: string; scheme: string; extra?: { feePayer?: string } }>
+    }
+
+    const entry = data.kinds?.find((kind) => kind.network === network && kind.scheme === "exact")
+    const feePayer = entry?.extra?.feePayer
+
+    if (!feePayer) {
+        throw new Error(`Facilitator did not provide feePayer for network ${network}`)
+    }
+
+    facilitatorFeePayerCache.set(network, {
+        feePayer,
+        expiresAt: Date.now() + FACILITATOR_FEE_PAYER_CACHE_TTL_MS,
+    })
+
+    return feePayer
+}
+
+async function withFacilitatorExtras<T extends { network: SupportedNetwork; extra?: Record<string, unknown> }>(
+    requirements: T[],
+): Promise<T[]> {
+    const hydrated = await Promise.all(
+        requirements.map(async (requirement) => {
+            if (requirement.network !== "solana") {
+                return requirement
+            }
+
+            try {
+                const feePayer = await getFacilitatorFeePayer("solana")
+                return {
+                    ...requirement,
+                    extra: {
+                        ...requirement.extra,
+                        feePayer,
+                    },
+                }
+            } catch (error) {
+                console.error("[x402] Falling back to default Solana feePayer", error)
+                return requirement
+            }
+        }),
+    )
+
+    return hydrated
+}
+
+function normalizeResourceUrl(url: string): string {
+    try {
+        const parsed = new URL(url)
+        parsed.host = parsed.host.replace(/^www\./, "")
+        return parsed.toString()
+    } catch {
+        return url
+    }
+}
+
+async function create402Response(request: NextRequest, priceUsd: number): Promise<NextResponse> {
+    const url = new URL(request.url)
+    const resource = normalizeResourceUrl(`${url.origin}${url.pathname}${url.search}`)
+    const method = request.method
+    const maxAmountRequired = Math.round(priceUsd * 1_000_000).toString()
+
+    const fromChatRoute = isFromChatRoute(request)
+
+    const accepts: Array<{
+        scheme: string
+        network: SupportedNetwork
+        maxAmountRequired: string
+        resource: string
+        description: string
+        mimeType: string
+        payTo: string
+        maxTimeoutSeconds: number
+        asset: string
+        outputSchema: any
+        extra?: Record<string, unknown>
+    }> = []
+
+    if (!fromChatRoute) {
+        accepts.push({
+            scheme: "exact",
+            network: "base",
+            maxAmountRequired,
+            resource,
+            description: `Access ${url.pathname} - Sundial Exchange API (Base) for $${priceUsd.toFixed(2)}`,
+            mimeType: "application/json",
+            payTo: RECIPIENT_ADDRESS,
+            maxTimeoutSeconds: 300,
+            asset: USDC_BASE,
+            outputSchema: getOutputSchema(url.pathname, method),
+        })
+    }
+
+    accepts.push({
+        scheme: "exact",
+        network: "solana",
+        maxAmountRequired,
+        resource,
+        description: `Access ${url.pathname} - Sundial Exchange API (Solana) for $${priceUsd.toFixed(2)}`,
+        mimeType: "application/json",
+        payTo: RECIPIENT_ADDRESS_SOLANA,
+        maxTimeoutSeconds: 300,
+        asset: USDC_SOLANA,
+        outputSchema: getOutputSchema(url.pathname, method),
+        extra: {
+            name: "USD Coin",
+            version: "2",
+            feePayer: RECIPIENT_ADDRESS_SOLANA,
+        },
+    })
+
+    const hydratedAccepts = await withFacilitatorExtras(accepts)
+
+    const challenge = {
+        x402Version: 1,
+        error: "X-PAYMENT header is required",
+        accepts: hydratedAccepts,
+    }
+
+    return NextResponse.json(challenge, { status: 402 })
+}
+
 interface SettlementResponse {
     success: boolean
     error: string | null
@@ -63,6 +206,18 @@ function normalizePathname(pathname: string): string {
     return pathname
 }
 
+function isFromChatRoute(request: NextRequest): boolean {
+    const referer = request.headers.get("referer")
+    if (!referer) return false
+
+    try {
+        const refererUrl = new URL(referer)
+        return refererUrl.pathname === "/chat"
+    } catch {
+        return false
+    }
+}
+
 function getEndpointPriceUsd(pathname: string): number {
     const normalized = normalizePathname(pathname)
     if (normalized === "/api/premium-insight") {
@@ -71,6 +226,10 @@ function getEndpointPriceUsd(pathname: string): number {
 
     if (normalized === "/api/pools/analytics") {
         return POOL_ANALYTICS_PRICE_USD
+    }
+
+    if (normalized === "/api/dex/overview") {
+        return 0.01
     }
 
     return DEFAULT_PRICE_USD
@@ -212,57 +371,6 @@ function getOutputSchema(pathname: string, method: string) {
     )
 }
 
-function create402Response(request: NextRequest, priceUsd: number): NextResponse {
-    const url = new URL(request.url)
-    // Normalize to canonical domain (without www) to match x402scan submissions
-    const resource = `${url.origin}${url.pathname}${url.search}`
-    const method = request.method
-    const maxAmountRequired = Math.round(priceUsd * 1_000_000).toString()
-
-    const challenge = {
-        x402Version: 1,
-        error: "X-PAYMENT header is required",
-        accepts: [
-            // Base payment option
-            {
-                scheme: "exact",
-                network: "base",
-                maxAmountRequired,
-                resource,
-                description: `Access ${url.pathname} - Sundial Exchange API (Base) for $${priceUsd.toFixed(2)}`,
-                mimeType: "application/json",
-                payTo: RECIPIENT_ADDRESS,
-                maxTimeoutSeconds: 300,
-                asset: USDC_BASE,
-                outputSchema: getOutputSchema(url.pathname, method),
-                extra: {
-                    name: "USD Coin",
-                    version: "2",
-                },
-            },
-            // Solana payment option
-            {
-                scheme: "exact",
-                network: "solana",
-                maxAmountRequired,
-                resource,
-                description: `Access ${url.pathname} - Sundial Exchange API (Solana) for $${priceUsd.toFixed(2)}`,
-                mimeType: "application/json",
-                payTo: RECIPIENT_ADDRESS_SOLANA,
-                maxTimeoutSeconds: 300,
-                asset: USDC_SOLANA,
-                outputSchema: getOutputSchema(url.pathname, method),
-                extra: {
-                    name: "USD Coin",
-                    version: "2",
-                },
-            },
-        ],
-    }
-
-    return NextResponse.json(challenge, { status: 402 })
-}
-
 function parsePaymentHeader(paymentHeader: string) {
     try {
         return JSON.parse(atob(paymentHeader))
@@ -293,10 +401,9 @@ async function verifyPayment(
     paymentHeader: string,
     request: NextRequest,
     priceUsd: number,
-): Promise<VerificationResponse & { network?: string }> {
+): Promise<VerificationResponse & { network?: SupportedNetwork }> {
     const url = new URL(request.url)
-    // Normalize to canonical domain (without www) to match x402scan submissions
-    const resource = `${url.origin}${url.pathname}${url.search}`
+    const resource = normalizeResourceUrl(`${url.origin}${url.pathname}${url.search}`)
     const maxAmountRequired = Math.round(priceUsd * 1_000_000).toString()
 
     console.log("[x402] Verifying payment for resource:", resource)
@@ -315,10 +422,27 @@ async function verifyPayment(
     console.log("[x402] Payment proof scheme:", paymentProof.scheme)
     console.log("[x402] Payment proof payload:", JSON.stringify(paymentProof.payload))
 
-    // Use the network from the payment proof
-    const paymentNetwork = paymentProof.network
+    const paymentNetworkRaw = typeof paymentProof.network === "string" ? paymentProof.network.toLowerCase() : ""
+    if (!isSupportedNetworkGuard(paymentNetworkRaw)) {
+        console.log("[x402] Unsupported payment network in proof:", paymentProof.network)
+        return {
+            isValid: false,
+            invalidReason: `Unsupported payment network: ${paymentProof.network}`,
+        }
+    }
+
+    const paymentNetwork: SupportedNetwork = paymentNetworkRaw
     const payTo = paymentNetwork === "solana" ? RECIPIENT_ADDRESS_SOLANA : RECIPIENT_ADDRESS
     const asset = paymentNetwork === "solana" ? USDC_SOLANA : USDC_BASE
+
+    let feePayer = paymentNetwork === "solana" ? RECIPIENT_ADDRESS_SOLANA : RECIPIENT_ADDRESS
+    if (paymentNetwork === "solana") {
+        try {
+            feePayer = await getFacilitatorFeePayer("solana")
+        } catch (error) {
+            console.error("[x402] Failed to fetch facilitator feePayer during verify", error)
+        }
+    }
 
     // Check if authorization recipient matches
     if (paymentProof.payload?.authorization?.to) {
@@ -354,6 +478,7 @@ async function verifyPayment(
                 extra: {
                     name: "USD Coin",
                     version: "2",
+                    feePayer,
                 },
             },
         }
@@ -403,12 +528,11 @@ async function verifyPayment(
 async function settlePayment(
     paymentHeader: string,
     request: NextRequest,
-    network: string,
+    network: SupportedNetwork,
     priceUsd: number,
 ): Promise<SettlementResponse> {
     const url = new URL(request.url)
-    // Normalize to canonical domain (without www) to match x402scan submissions
-    const resource = `${url.origin}${url.pathname}${url.search}`
+    const resource = normalizeResourceUrl(`${url.origin}${url.pathname}${url.search}`)
 
     const payTo = network === "solana" ? RECIPIENT_ADDRESS_SOLANA : RECIPIENT_ADDRESS
     const asset = network === "solana" ? USDC_SOLANA : USDC_BASE
@@ -426,6 +550,15 @@ async function settlePayment(
 
     const description = `Access ${url.pathname} - Sundial Exchange API (${network === "solana" ? "Solana" : "Base"}) for $${priceUsd.toFixed(2)}`
     const maxAmountRequired = Math.round(priceUsd * 1_000_000).toString()
+    let feePayer = network === "solana" ? RECIPIENT_ADDRESS_SOLANA : RECIPIENT_ADDRESS
+    if (network === "solana") {
+        try {
+            feePayer = await getFacilitatorFeePayer("solana")
+        } catch (error) {
+            console.error("[x402] Failed to fetch facilitator feePayer during settle", error)
+        }
+    }
+
     const settlePayload = {
         x402Version: paymentProof.x402Version ?? 1,
         scheme: paymentProof.scheme,
@@ -445,6 +578,7 @@ async function settlePayment(
             extra: {
                 name: "USD Coin",
                 version: "2",
+                feePayer,
             },
         },
     }
@@ -544,10 +678,18 @@ export async function middleware(request: NextRequest) {
         hasPayment,
     })
 
-    // Exempt our own frontend
+    const fromChatRoute = isFromChatRoute(request)
+    const isPaidEndpoint = normalizePathname(url.pathname) === "/api/dex/overview"
+
+    // Exempt our own frontend UNLESS it's a paid endpoint from chat route
     if (isExemptOrigin(request)) {
-        console.log("[x402] Origin exempted, allowing through")
-        return NextResponse.next()
+        if (isPaidEndpoint && fromChatRoute) {
+            console.log("[x402] Paid endpoint from /chat route - payment required")
+            // Continue to payment check below
+        } else {
+            console.log("[x402] Origin exempted, allowing through")
+            return NextResponse.next()
+        }
     }
 
     // Check for payment header
@@ -582,8 +724,19 @@ export async function middleware(request: NextRequest) {
                 return create402Response(request, priceUsd)
             }
 
+            const forwardedHeaders = new Headers(request.headers)
+            forwardedHeaders.set("x-payment-validated", "true")
+            forwardedHeaders.set("x-payment-network", settlement.networkId || verification.network)
+            if (settlement.txHash) {
+                forwardedHeaders.set("x-payment-tx", settlement.txHash)
+            }
+
             // Continue to the API route
-            const response = NextResponse.next()
+            const response = NextResponse.next({
+                request: {
+                    headers: forwardedHeaders,
+                },
+            })
 
             // Add X-PAYMENT-RESPONSE header with settlement details (base64 encoded JSON)
             if (settlement.success && settlement.txHash) {
@@ -609,6 +762,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: "/api/:path*",
+    matcher: [
+        "/api/((?!chat).*)", // Match all /api/* except /api/chat
+    ],
 }
 

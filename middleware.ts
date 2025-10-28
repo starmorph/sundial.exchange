@@ -120,7 +120,9 @@ async function create402Response(request: NextRequest, priceUsd: number): Promis
         extra?: Record<string, unknown>
     }> = []
 
-    if (!fromChatRoute) {
+    const allowBase = !isExemptOrigin(request) || !fromChatRoute
+
+    if (allowBase) {
         accepts.push({
             scheme: "exact",
             network: "base",
@@ -395,6 +397,16 @@ function shouldRetrySettlement(status: number, facilitatorError: string | null):
 
 async function delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function shouldBypassPayment(request: NextRequest, pathname: string): boolean {
+    const normalizedPath = normalizePathname(pathname)
+    if (normalizedPath !== "/api/dex/overview") {
+        return false
+    }
+
+    const skipHeader = request.headers.get("x-skip-payment")
+    return skipHeader === "true"
 }
 
 async function verifyPayment(
@@ -679,7 +691,8 @@ export async function middleware(request: NextRequest) {
     })
 
     const fromChatRoute = isFromChatRoute(request)
-    const isPaidEndpoint = normalizePathname(url.pathname) === "/api/dex/overview"
+    const normalizedPath = normalizePathname(url.pathname)
+    const isPaidEndpoint = normalizedPath === "/api/dex/overview"
 
     // Exempt our own frontend UNLESS it's a paid endpoint from chat route
     if (isExemptOrigin(request)) {
@@ -690,6 +703,11 @@ export async function middleware(request: NextRequest) {
             console.log("[x402] Origin exempted, allowing through")
             return NextResponse.next()
         }
+    }
+
+    if (shouldBypassPayment(request, normalizedPath)) {
+        console.log("[x402] Payment bypass header detected, allowing through")
+        return NextResponse.next()
     }
 
     // Check for payment header

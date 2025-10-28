@@ -24,7 +24,7 @@ export default function DexAnalyticsPage() {
   async function loadData() {
     setLoading(true)
     try {
-      const res = await fetch("/api/dex/overview")
+      const res = await fetch("/api/dex/overview", { headers: { "x-skip-payment": "true" }, cache: "no-store" })
       if (res.ok) {
         const json = (await res.json()) as { protocols: DexProtocolSummary[]; volumes: DexVolumeData[] }
         setProtocols(json.protocols.sort((a, b) => (b.total24h || 0) - (a.total24h || 0)))

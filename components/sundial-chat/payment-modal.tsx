@@ -72,9 +72,9 @@ export function SundialPaymentModal({
         : "/api/dex/overview"
 
       // Use localhost in dev, production domain in prod
-      const baseUrl = process.env.NODE_ENV === "production"
-        ? "https://sundial.exchange"
-        : window.location.origin
+      const baseUrl = typeof window !== "undefined"
+        ? window.location.origin
+        : process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
 
       console.log("[Payment] Making x402 fetch to:", `${baseUrl}${endpoint}`)
 

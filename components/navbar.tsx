@@ -60,7 +60,7 @@ export function Navbar() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/dex-analytics/humidif" className="flex w-full items-center gap-2">
-                    Humidif
+                    Humidifi
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -120,7 +120,7 @@ export function Navbar() {
                     </SheetClose>
                     <SheetClose asChild>
                       <Link href="/dex-analytics/humidif" className="text-sm font-medium text-foreground">
-                        Humidif
+                        Humidifi
                       </Link>
                     </SheetClose>
                     <SheetClose asChild>

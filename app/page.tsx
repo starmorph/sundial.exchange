@@ -49,16 +49,6 @@ export default function Home() {
                             </Button>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-center gap-8 pt-10 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                                <span className="font-medium">$2.4B+ Volume</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                                <span className="font-medium">1M+ Swaps</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>

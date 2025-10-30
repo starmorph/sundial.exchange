@@ -114,6 +114,17 @@ export async function getDexProtocolSummary(protocol: string): Promise<DexProtoc
   }
 }
 
+// Exclusion list for non-native Solana DEXs that are multi-chain
+// and would distort Solana-specific analytics
+const NON_NATIVE_SOLANA_DEXS = [
+  "pancakeswap",
+  "pancakeswap-amm",
+  "uniswap",
+  "sushiswap",
+  "curve",
+  "balancer",
+]
+
 export async function getSolanaDexProtocols(): Promise<DexProtocolSummary[]> {
   try {
     // Get all DEX protocols
@@ -128,8 +139,13 @@ export async function getSolanaDexProtocols(): Promise<DexProtocolSummary[]> {
     console.log("[v0] All DEX protocols:", data)
 
     // Filter for protocols that have Solana in their chains
+    // but exclude non-native multi-chain DEXs
     if (data.protocols && Array.isArray(data.protocols)) {
-      return data.protocols.filter((p: any) => p.chains && Array.isArray(p.chains) && p.chains.includes("Solana"))
+      return data.protocols.filter((p: any) => {
+        const hasSolana = p.chains && Array.isArray(p.chains) && p.chains.includes("Solana")
+        const isNotExcluded = !NON_NATIVE_SOLANA_DEXS.includes(p.name?.toLowerCase() || "")
+        return hasSolana && isNotExcluded
+      })
     }
 
     return []

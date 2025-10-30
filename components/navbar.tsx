@@ -1,10 +1,10 @@
 "use client"
 
-import { ChevronDown, Clock, Menu } from 'lucide-react'
+import { BarChart3, ChevronDown, Clock, Menu } from 'lucide-react'
 import dynamic from "next/dynamic"
 import Link from 'next/link'
 import { Button } from './ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Separator } from './ui/separator'
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet'
 
@@ -52,27 +52,44 @@ export function Navbar() {
                   <ChevronDown className="h-3 w-3" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-64">
                 <DropdownMenuItem asChild>
-                  <Link href="/dex-analytics" className="flex w-full items-center gap-2">
+                  <Link href="/dex-analytics" className="flex w-full items-center gap-2 py-3 font-semibold text-base">
+                    <BarChart3 className="h-5 w-5" />
                     DEX Overview
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dex-analytics/humidifi" className="flex w-full items-center gap-2">
-                    Humidifi
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dex-analytics/raydium-amm" className="flex w-full items-center gap-2">
-                    Raydium
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dex-analytics/meteora-dlmm" className="flex w-full items-center gap-2">
-                    Meteora
-                  </Link>
-                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs text-muted-foreground font-mono uppercase tracking-wider">
+                  Top Solana DEXes
+                </DropdownMenuLabel>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dex-analytics/raydium-amm" className="flex w-full items-center gap-2">
+                      Raydium
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dex-analytics/orca-dex" className="flex w-full items-center gap-2">
+                      Orca
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dex-analytics/meteora-dlmm" className="flex w-full items-center gap-2">
+                      Meteora
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dex-analytics/phoenix-dex" className="flex w-full items-center gap-2">
+                      Phoenix
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dex-analytics/lifinity-v2" className="flex w-full items-center gap-2">
+                      Lifinity
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
             <Link href="/chat" className={navLinkClass}>
@@ -114,23 +131,38 @@ export function Navbar() {
                   <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Dex Analytics</span>
                   <div className="flex flex-col gap-2">
                     <SheetClose asChild>
-                      <Link href="/dex-analytics" className="text-sm font-medium text-foreground">
-                        Dex Overview
+                      <Link href="/dex-analytics" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4" />
+                        DEX Overview
                       </Link>
                     </SheetClose>
+                    <Separator className="opacity-40 my-2" />
+                    <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 pl-1">
+                      Top Solana DEXes
+                    </div>
                     <SheetClose asChild>
-                      <Link href="/dex-analytics/humidifi" className="text-sm font-medium text-foreground">
-                        Humidifi
-                      </Link>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <Link href="/dex-analytics/raydium-amm" className="text-sm font-medium text-foreground">
+                      <Link href="/dex-analytics/raydium-amm" className="text-sm font-medium text-foreground pl-2">
                         Raydium
                       </Link>
                     </SheetClose>
                     <SheetClose asChild>
-                      <Link href="/dex-analytics/meteora-dlmm" className="text-sm font-medium text-foreground">
+                      <Link href="/dex-analytics/orca-dex" className="text-sm font-medium text-foreground pl-2">
+                        Orca
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link href="/dex-analytics/meteora-dlmm" className="text-sm font-medium text-foreground pl-2">
                         Meteora
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link href="/dex-analytics/phoenix-dex" className="text-sm font-medium text-foreground pl-2">
+                        Phoenix
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link href="/dex-analytics/lifinity-v2" className="text-sm font-medium text-foreground pl-2">
+                        Lifinity
                       </Link>
                     </SheetClose>
                   </div>

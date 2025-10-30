@@ -27,7 +27,7 @@ async function main() {
 
     for (const tx of txs) {
         tx.sign([wallet])
-        const sig = await sendAndConfirmRawTransaction(connection, tx.serialize())
+        const sig = await sendAndConfirmRawTransaction(connection, Buffer.from(tx.serialize()))
         console.log("Claimed fees. Signature:", `https://solscan.io/tx/${sig}`)
     }
 }

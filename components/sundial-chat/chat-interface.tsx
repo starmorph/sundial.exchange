@@ -290,7 +290,7 @@ export function SundialChatInterface() {
                       >
                         <ToolHeader
                           title={toolName}
-                          state={isAwaitingPayment ? "pending" : part.state}
+                          state={isAwaitingPayment ? "input-streaming" : part.state}
                           type={part.type}
                         />
                         <ToolContent>

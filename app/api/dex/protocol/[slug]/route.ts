@@ -3,9 +3,9 @@ import { NextResponse } from "next/server"
 
 export async function GET(
     _request: Request,
-    context: { params: { slug: string } },
+    { params }: { params: Promise<{ slug: string }> },
 ) {
-    const slug = context.params.slug
+    const { slug } = await params
     if (!slug || typeof slug !== "string") {
         return NextResponse.json({ error: "Missing protocol slug" }, { status: 400 })
     }

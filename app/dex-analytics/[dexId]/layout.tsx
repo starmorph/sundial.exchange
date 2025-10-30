@@ -11,8 +11,8 @@ export async function generateStaticParams(): Promise<Params[]> {
         .map((p) => ({ dexId: p.slug }))
 }
 
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-    const { dexId } = params
+export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
+    const { dexId } = await params
     const baseUrl = "https://sundial.exchange"
     const title = `${dexId} Analytics on Solana | Sundial`
     const description = `View ${dexId} DEX analytics on Solana: volume history, market share and chain breakdown.`

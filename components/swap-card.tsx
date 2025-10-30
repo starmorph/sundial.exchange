@@ -27,7 +27,7 @@ export function SwapCard({
   onMaxClick,
   onPercentageClick,
 }: SwapCardProps) {
-  const usdValue = amount ? `≈ $${(Number(amount) * token.price).toFixed(2)}` : "≈ $0.00"
+  const usdValue = amount && token.price ? `≈ $${(Number(amount) * token.price).toFixed(2)}` : "≈ $0.00"
 
   return (
     <div className="rounded-2xl border-2 border-primary/30 bg-card p-6 my-2 space-y-4 overflow-visible">

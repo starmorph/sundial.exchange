@@ -161,6 +161,31 @@ export default function SwapInterface() {
     setBuyToken(tempToken)
     setSellAmount(buyAmount)
     setBuyAmount(tempAmount)
+    setCurrentQuote(null) // Clear quote when swapping
+  }
+
+  const handleSellTokenChange = (token: Token) => {
+    // Prevent selecting the same token on both sides
+    if (buyToken && token.mint === buyToken.mint) {
+      // Swap the tokens if user tries to select the same token
+      setSellToken(token)
+      setBuyToken(sellToken)
+    } else {
+      setSellToken(token)
+    }
+    setCurrentQuote(null)
+  }
+
+  const handleBuyTokenChange = (token: Token) => {
+    // Prevent selecting the same token on both sides
+    if (sellToken && token.mint === sellToken.mint) {
+      // Swap the tokens if user tries to select the same token
+      setBuyToken(token)
+      setSellToken(buyToken)
+    } else {
+      setBuyToken(token)
+    }
+    setCurrentQuote(null)
   }
 
   const handleSellAmountChange = (value: string) => {
@@ -188,10 +213,10 @@ export default function SwapInterface() {
   }
 
   const exchangeRate =
-    currentQuote && sellAmount && buyAmount
-      ? `1 ${sellToken?.symbol} ≈ ${(Number(buyAmount) / Number(sellAmount)).toFixed(4)} ${buyToken?.symbol}`
+    currentQuote && sellAmount && buyAmount && Number(sellAmount) > 0
+      ? `1 ${sellToken?.symbol} = ${(Number(buyAmount) / Number(sellAmount)).toFixed(6)} ${buyToken?.symbol}`
       : sellToken && buyToken
-        ? `1 ${sellToken.symbol} ≈ ... ${buyToken.symbol}`
+        ? `1 ${sellToken.symbol} = ... ${buyToken.symbol}`
         : ""
 
   const getSwapButtonState = () => {
@@ -441,7 +466,7 @@ export default function SwapInterface() {
           amount={sellAmount}
           onAmountChange={handleSellAmountChange}
           token={sellToken}
-          onTokenChange={setSellToken}
+          onTokenChange={handleSellTokenChange}
           tokens={tokens}
           showMaxButton
           onMaxClick={handleMaxClick}
@@ -465,7 +490,7 @@ export default function SwapInterface() {
           amount={buyAmount}
           onAmountChange={handleBuyAmountChange}
           token={buyToken}
-          onTokenChange={setBuyToken}
+          onTokenChange={handleBuyTokenChange}
           tokens={tokens}
         />
       </div>

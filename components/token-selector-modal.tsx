@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { TokenListItem } from "@/components/token-list-item"
 import type { Token } from "@/components/swap-interface"
-import { Search } from "lucide-react"
+import { Search, Loader2 } from "lucide-react"
+import { searchTokens } from "@/lib/jupiter-token-search"
 
 interface TokenSelectorModalProps {
   open: boolean
@@ -25,6 +26,44 @@ export function TokenSelectorModal({
   onSelectToken,
 }: TokenSelectorModalProps) {
   const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<Token[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+
+  // Reset search when modal closes
+  useEffect(() => {
+    if (!open) {
+      setSearchQuery("")
+      setSearchResults([])
+    }
+  }, [open])
+
+  // Debounced search effect
+  useEffect(() => {
+    const searchTimer = setTimeout(async () => {
+      if (searchQuery.trim().length >= 2) {
+        setIsSearching(true)
+        try {
+          const results = await searchTokens(searchQuery)
+          // Add balance 0 to search results (they're external tokens)
+          const resultsWithBalance = results.map((token) => ({
+            ...token,
+            balance: 0,
+            price: undefined,
+          }))
+          setSearchResults(resultsWithBalance)
+        } catch (error) {
+          console.error("Search error:", error)
+          setSearchResults([])
+        } finally {
+          setIsSearching(false)
+        }
+      } else {
+        setSearchResults([])
+      }
+    }, 300) // 300ms debounce
+
+    return () => clearTimeout(searchTimer)
+  }, [searchQuery])
 
   // Filter tokens based on search query
   const filteredTokens = useMemo(() => {
@@ -33,13 +72,31 @@ export function TokenSelectorModal({
     }
 
     const query = searchQuery.toLowerCase().trim()
-    return tokens.filter(
+    const localMatches = tokens.filter(
       (token) =>
         token.symbol.toLowerCase().includes(query) ||
         token.name.toLowerCase().includes(query) ||
         token.mint.toLowerCase().includes(query),
     )
-  }, [tokens, searchQuery])
+
+    // If we have search results from API, merge them with local matches
+    if (searchResults.length > 0) {
+      // Combine local and API results, remove duplicates based on mint address
+      const combined = [...localMatches]
+      const mints = new Set(localMatches.map((t) => t.mint))
+
+      for (const result of searchResults) {
+        if (!mints.has(result.mint)) {
+          combined.push(result)
+          mints.add(result.mint)
+        }
+      }
+
+      return combined
+    }
+
+    return localMatches
+  }, [tokens, searchQuery, searchResults])
 
   // Quick select tokens
   const quickSelectTokens = useMemo(() => {
@@ -72,7 +129,11 @@ export function TokenSelectorModal({
         {/* Search Bar */}
         <div className="px-6 pb-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            {isSearching ? (
+              <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
+            ) : (
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            )}
             <Input
               type="text"
               placeholder="Search by name, symbol, or address..."
@@ -82,6 +143,11 @@ export function TokenSelectorModal({
               autoFocus
             />
           </div>
+          {searchQuery.length >= 2 && (
+            <p className="text-xs text-muted-foreground mt-2">
+              {isSearching ? "Searching..." : `Showing ${filteredTokens.length} results`}
+            </p>
+          )}
         </div>
 
         {/* Quick Select Buttons */}

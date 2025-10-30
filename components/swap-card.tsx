@@ -27,11 +27,16 @@ export function SwapCard({
   onMaxClick,
   onPercentageClick,
 }: SwapCardProps) {
-  const usdValue = amount ? `≈ $${(Number(amount) * token.price).toFixed(2)}` : "≈ $0.00"
+  const usdValue =
+    amount && token.price
+      ? `$${(Number(amount) * token.price).toFixed(2)}`
+      : token.price
+        ? "$0.00"
+        : ""
 
   return (
-    <div className="rounded-2xl border-2 border-primary/30 bg-card p-6 my-2 space-y-4 overflow-visible">
-      <div className="text-sm text-muted-foreground">{label}</div>
+    <div className="rounded-2xl border border-border/40 bg-card/50 backdrop-blur-sm p-6 my-2 space-y-4 overflow-visible shadow-sm hover:border-border/60 transition-colors">
+      <div className="text-sm font-medium text-muted-foreground">{label}</div>
 
       <div className="flex items-center justify-between gap-4 overflow-visible">
         <input
@@ -55,18 +60,18 @@ export function SwapCard({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onMaxClick}
-                className="h-6 px-2 text-xs text-primary hover:bg-primary/10 hover:text-primary"
+                onClick={() => onPercentageClick?.(50)}
+                className="h-6 px-2 text-xs text-primary hover:bg-primary/10 hover:text-primary font-medium"
               >
-                Max
+                Half
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onPercentageClick?.(50)}
-                className="h-6 px-2 text-xs text-primary hover:bg-primary/10 hover:text-primary"
+                onClick={onMaxClick}
+                className="h-6 px-2 text-xs text-primary hover:bg-primary/10 hover:text-primary font-medium"
               >
-                %
+                Max
               </Button>
             </>
           )}

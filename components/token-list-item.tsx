@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import type { Token } from "@/components/swap-interface"
 import { ExternalLink } from "lucide-react"
@@ -12,6 +13,7 @@ interface TokenListItemProps {
 }
 
 export function TokenListItem({ token, onSelect, showBalance = true }: TokenListItemProps) {
+  const [imageError, setImageError] = useState(false)
   const abbreviatedAddress = `${token.mint.slice(0, 4)}...${token.mint.slice(-4)}`
   const heliusExplorerUrl = `https://orbx.helius.xyz/address/${token.mint}`
 
@@ -28,23 +30,16 @@ export function TokenListItem({ token, onSelect, showBalance = true }: TokenList
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {/* Token Logo */}
-        <div className="relative w-10 h-10 flex-shrink-0 rounded-full overflow-hidden bg-secondary">
-          {token.logoURI ? (
+        <div className="relative w-10 h-10 flex-shrink-0 rounded-full overflow-hidden bg-secondary/50 flex items-center justify-center">
+          {token.logoURI && !imageError ? (
             <Image
+              key={token.mint}
               src={token.logoURI}
               alt={token.name}
               width={40}
               height={40}
               className="w-full h-full object-cover"
-              onError={(e) => {
-                // Fallback to emoji icon if image fails to load
-                const target = e.target as HTMLImageElement
-                target.style.display = "none"
-                const parent = target.parentElement
-                if (parent) {
-                  parent.innerHTML = `<div class="w-full h-full flex items-center justify-center text-xl">${token.icon}</div>`
-                }
-              }}
+              onError={() => setImageError(true)}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-xl">{token.icon}</div>

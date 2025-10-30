@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import type { Token } from "@/components/swap-interface"
 import { ExternalLink } from "lucide-react"
-import Image from "next/image"
+import { TokenLogo } from "@/components/optimized-logo"
 
 interface TokenListItemProps {
   token: Token
@@ -28,28 +28,13 @@ export function TokenListItem({ token, onSelect, showBalance = true }: TokenList
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {/* Token Logo */}
-        <div className="relative w-10 h-10 flex-shrink-0 rounded-full overflow-hidden bg-secondary">
-          {token.logoURI ? (
-            <Image
-              src={token.logoURI}
-              alt={token.name}
-              width={40}
-              height={40}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                // Fallback to emoji icon if image fails to load
-                const target = e.target as HTMLImageElement
-                target.style.display = "none"
-                const parent = target.parentElement
-                if (parent) {
-                  parent.innerHTML = `<div class="w-full h-full flex items-center justify-center text-xl">${token.icon}</div>`
-                }
-              }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-xl">{token.icon}</div>
-          )}
-        </div>
+        <TokenLogo
+          logoURI={token.logoURI}
+          symbol={token.symbol}
+          icon={token.icon}
+          size={40}
+          className="flex-shrink-0"
+        />
 
         {/* Token Info */}
         <div className="flex flex-col items-start flex-1 min-w-0">

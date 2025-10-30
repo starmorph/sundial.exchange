@@ -10,6 +10,7 @@ import { BarChart3, DollarSign, TrendingDown, TrendingUp } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { DexLogo } from "@/components/optimized-logo"
 
 export default function DexAnalyticsPage() {
   const router = useRouter()
@@ -242,16 +243,11 @@ export default function DexAnalyticsPage() {
                       <TableCell className="font-mono text-muted-foreground">{index + 1}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {protocol.logo && (
-                            <img
-                              src={protocol.logo || "/placeholder.svg"}
-                              alt={protocol.name}
-                              className="h-6 w-6 rounded-full"
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none"
-                              }}
-                            />
-                          )}
+                          <DexLogo
+                            logoURL={protocol.logo}
+                            name={protocol.name}
+                            size={24}
+                          />
                           <div>
                             <div className="font-semibold text-foreground">{protocol.displayName || protocol.name}</div>
                             <div className="text-xs text-muted-foreground">{protocol.category}</div>

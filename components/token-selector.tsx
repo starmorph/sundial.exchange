@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { TokenSelectorModal } from "@/components/token-selector-modal"
 import { ChevronDown } from "lucide-react"
 import type { Token } from "@/components/swap-interface"
-import Image from "next/image"
+import { TokenLogo } from "@/components/optimized-logo"
 
 interface TokenSelectorProps {
   selectedToken: Token
@@ -23,27 +23,12 @@ export function TokenSelector({ selectedToken, onSelectToken, tokens }: TokenSel
         onClick={() => setOpen(true)}
         className="h-12 gap-2 rounded-full border-border bg-secondary/50 px-4 hover:bg-secondary"
       >
-        {selectedToken.logoURI ? (
-          <div className="relative w-6 h-6 rounded-full overflow-hidden">
-            <Image
-              src={selectedToken.logoURI}
-              alt={selectedToken.symbol}
-              width={24}
-              height={24}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.style.display = "none"
-                const parent = target.parentElement
-                if (parent) {
-                  parent.innerHTML = `<span class="text-xl">${selectedToken.icon}</span>`
-                }
-              }}
-            />
-          </div>
-        ) : (
-          <span className="text-2xl">{selectedToken.icon}</span>
-        )}
+        <TokenLogo
+          logoURI={selectedToken.logoURI}
+          symbol={selectedToken.symbol}
+          icon={selectedToken.icon}
+          size={24}
+        />
         <span className="font-semibold">{selectedToken.symbol}</span>
         <ChevronDown className="h-4 w-4 text-muted-foreground" />
       </Button>

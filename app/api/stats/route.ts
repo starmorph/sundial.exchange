@@ -132,11 +132,11 @@ export async function GET() {
             if (!res.ok) return null
             const json = (await res.json()) as { totalDataChart?: Array<[number, number]> }
             const chart = json.totalDataChart
-            if (!Array.isArray(chart) || chart.length < 2) return null
+            if (!Array.isArray(chart) || chart.length < 8) return null
             const last = chart[chart.length - 1]?.[1]
-            const prev = chart[chart.length - 2]?.[1]
-            if (typeof last !== "number" || typeof prev !== "number" || prev === 0) return null
-            const change = ((last - prev) / prev) * 100
+            const prev7Days = chart[chart.length - 8]?.[1]
+            if (typeof last !== "number" || typeof prev7Days !== "number" || prev7Days === 0) return null
+            const change = ((last - prev7Days) / prev7Days) * 100
             return Number.isFinite(change) ? change : null
         } catch {
             return null

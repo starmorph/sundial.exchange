@@ -1,34 +1,26 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+/models
+/models/errors
+/types
 /node_modules
-**/node_modules
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files
-.env*
-tools/**/.env*
-
-# tool subpackages build artifacts
-tools/**/dist
-tools/**/build
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-.pnpm-store/
+/lib
+/sdk
+/funcs
+/react-query
+/mcp-server
+/hooks
+/index.*
+/core.*
+/bin
+/cjs
+/esm
+/dist
+/.tsbuildinfo
+/.eslintcache
+/.tshy
+/.tshy-*
+/__tests__
+.DS_Store
+**/.speakeasy/temp/
+**/.speakeasy/logs/
+.DS_Store
+/.speakeasy/reports

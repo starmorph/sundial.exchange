@@ -4,6 +4,12 @@
 
 Integrate an AI chatbot with wallet connection that can autonomously pay to access the Sundial Exchange API via x402 protocol.
 
+## PostHog AI analytics
+
+- LLM generations are instrumented with PostHog tracing inside `app/api/chat/route.ts` using the [`withTracing` helper](https://posthog.com/docs/llm-analytics/installation/vercel-ai).
+- Provide `POSTHOG_API_KEY` (or `NEXT_PUBLIC_POSTHOG_KEY`) and optional `POSTHOG_HOST` in the environment so the server-side PostHog client can forward analytics.
+- Chat requests automatically include the caller wallet (when connected) as the `posthogDistinctId` plus metadata (`route`, `hasTools`, `temperature`) for downstream analysis in the PostHog LLM dashboard.
+
 ## Architecture
 
 ```

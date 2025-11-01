@@ -10,6 +10,7 @@ import { ArrowLeft, BarChart3, DollarSign, ExternalLink, Globe, TrendingDown, Tr
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { DexLogo } from "@/components/optimized-logo"
 
 export default function IndividualDexPage() {
     const params = useParams()
@@ -112,16 +113,12 @@ export default function IndividualDexPage() {
                 {/* Header */}
                 <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
                     <div className="flex items-center gap-4 mb-4">
-                        {protocolData.logo && (
-                            <img
-                                src={protocolData.logo || "/placeholder.svg"}
-                                alt={protocolData.name}
-                                className="h-16 w-16 rounded-full border-2 border-primary/20"
-                                onError={(e) => {
-                                    e.currentTarget.style.display = "none"
-                                }}
-                            />
-                        )}
+                        <DexLogo
+                            logoURL={protocolData.logo}
+                            name={protocolData.name}
+                            size={64}
+                            className="border-2 border-primary/20"
+                        />
                         <div>
                             <h1 className="text-4xl font-bold text-foreground font-mono">
                                 {protocolData.displayName || protocolData.name}

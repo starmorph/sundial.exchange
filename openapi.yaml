@@ -83,6 +83,17 @@ paths:
       operationId: getDexOverview
       summary: Get Solana DEX overview
       description: Returns Solana DEX protocol summaries and aggregated volume timeline for Solana DEXs.
+      x-codeSamples:
+        - lang: cURL
+          label: cURL
+          source: |
+            curl -X GET "https://sundial.exchange/api/dex/overview" \
+              -H "Accept: application/json"
+        - lang: JavaScript
+          label: Fetch API
+          source: |
+            const res = await fetch('https://sundial.exchange/api/dex/overview');
+            const data = await res.json();
       responses:
         "200":
           description: Overview data
@@ -100,6 +111,21 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/DexVolumeData"
+              examples:
+                sample:
+                  summary: Example overview payload
+                  value:
+                    protocols:
+                      - slug: raydium
+                        displayName: Raydium
+                        url: https://raydium.io
+                        tvl: 54200000
+                        total24h: 128500000
+                    volumes:
+                      - date: "2025-10-25"
+                        total24h: 123456789
+                      - date: "2025-10-26"
+                        total24h: 118765432
         "402":
           $ref: "#/components/responses/PaymentRequired"
         "500":
@@ -125,6 +151,18 @@ paths:
           description: Solana pool address (base58)
           schema:
             type: string
+          example: 9wFFqz4haWkYox2dXkbZ7P3V7g9E3G7Ayd6A8aXjRY3F
+      x-codeSamples:
+        - lang: cURL
+          label: cURL
+          source: |
+            curl -X GET "https://sundial.exchange/api/pools/analytics?poolId=9wFFqz4haWkYox2dXkbZ7P3V7g9E3G7Ayd6A8aXjRY3F" \
+              -H "Accept: application/json"
+        - lang: JavaScript
+          label: Fetch API
+          source: |
+            const res = await fetch('https://sundial.exchange/api/pools/analytics?poolId=9wFFqz4haWkYox2dXkbZ7P3V7g9E3G7Ayd6A8aXjRY3F');
+            const data = await res.json();
       responses:
         "200":
           description: Pool analytics payload
@@ -137,6 +175,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PoolAnalyticsResponse"
+              examples:
+                sample:
+                  summary: Example analytics
+                  value:
+                    poolId: 9wFFqz4haWkYox2dXkbZ7P3V7g9E3G7Ayd6A8aXjRY3F
+                    poolName: RAY/SOL
+                    metrics:
+                      volume24hUsd: 1532456.12
+                      volume7dUsd: 10234567.89
+                      fees24hUsd: 8456.22
+                      tvlUsd: 27450000.55
+                      liquidityUsd: 27450000.55
+                      apr: 12.3
+                      apy: 13.1
+                    reserves:
+                      baseSymbol: RAY
+                      quoteSymbol: SOL
+                      baseMint: "4k3Dyjzvzp8eMZWUXbBCQ1Z7Q7f2o5EwB3gG7x6Z7dS"
+                      quoteMint: "So11111111111111111111111111111111111111112"
+                      baseAmount: 1250000.5
+                      quoteAmount: 53210.42
+                    priceImpactBps: 27
+                    updatedAtUnix: 1730419200
+                    fetchedAt: "2025-10-31T23:59:59Z"
         "400":
           description: Missing pool id
           content:
@@ -164,6 +226,18 @@ paths:
           schema:
             type: string
           description: Protocol slug (e.g. "raydium")
+          example: raydium
+      x-codeSamples:
+        - lang: cURL
+          label: cURL
+          source: |
+            curl -X GET "https://sundial.exchange/api/dex/protocol/raydium" \
+              -H "Accept: application/json"
+        - lang: JavaScript
+          label: Fetch API
+          source: |
+            const res = await fetch('https://sundial.exchange/api/dex/protocol/raydium');
+            const data = await res.json();
       responses:
         "200":
           description: Protocol details
@@ -171,6 +245,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DexProtocolSummary"
+              examples:
+                raydium:
+                  summary: Example protocol summary
+                  value:
+                    slug: raydium
+                    displayName: Raydium
+                    url: https://raydium.io
+                    tvl: 54200000
+                    total24h: 128500000
         "400":
           description: Missing or invalid slug
           content:
@@ -192,6 +275,17 @@ paths:
       operationId: getStats
       summary: Get near real-time platform stats
       description: Returns TPS, SOL price, TVL, and 24h volume plus 24h change percentages when available.
+      x-codeSamples:
+        - lang: cURL
+          label: cURL
+          source: |
+            curl -X GET "https://sundial.exchange/api/stats" \
+              -H "Accept: application/json"
+        - lang: JavaScript
+          label: Fetch API
+          source: |
+            const res = await fetch('https://sundial.exchange/api/stats');
+            const data = await res.json();
       responses:
         "200":
           description: Stats payload
@@ -199,6 +293,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StatsResponse"
+              examples:
+                sample:
+                  summary: Example stats
+                  value:
+                    tps: 2150.5
+                    solPriceUsd: 158.32
+                    tvlUsd: 1250000000.0
+                    volume24hUsd: 845000000.0
+                    solChange24hPct: 2.45
+                    tvlChange24hPct: 0.87
+                    volume24hChangePct: -1.23
         "402":
           $ref: "#/components/responses/PaymentRequired"
 
@@ -216,6 +321,18 @@ paths:
             type: integer
             minimum: 1
             default: 24
+          example: 24
+      x-codeSamples:
+        - lang: cURL
+          label: cURL
+          source: |
+            curl -X GET "https://sundial.exchange/api/trending?hours=24" \
+              -H "Accept: application/json"
+        - lang: JavaScript
+          label: Fetch API
+          source: |
+            const res = await fetch('https://sundial.exchange/api/trending?hours=24');
+            const data = await res.json();
       responses:
         "200":
           description: Trending token series
@@ -225,6 +342,37 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/NormalizedTrendingToken"
+              examples:
+                minimal:
+                  summary: Single token trend
+                  value:
+                    - symbol: JUP
+                      currentPrice: 1.12
+                      change24h: 3.45
+                      prices:
+                        - timestamp: 1730314800
+                          price: 1.08
+                        - timestamp: 1730401200
+                          price: 1.12
+                multiple:
+                  summary: Multiple tokens
+                  value:
+                    - symbol: SOL
+                      currentPrice: 158.32
+                      change24h: 2.45
+                      prices:
+                        - timestamp: 1730314800
+                          price: 154.10
+                        - timestamp: 1730401200
+                          price: 158.32
+                    - symbol: RAY
+                      currentPrice: 2.48
+                      change24h: -1.2
+                      prices:
+                        - timestamp: 1730314800
+                          price: 2.51
+                        - timestamp: 1730401200
+                          price: 2.48
         "402":
           $ref: "#/components/responses/PaymentRequired"
         "500":
@@ -246,6 +394,17 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/SwapEventPayload"
+            examples:
+              basic:
+                summary: Minimal swap event
+                value:
+                  txHash: "0xabc123..."
+                  user: "A1b2C3d4E5f6G7h8i9J0kLmNoPqRsTuVwXyZ12345"
+                  base: "SOL"
+                  quote: "USDC"
+                  amountBase: 12.5
+                  amountQuote: 1975.33
+                  timestamp: "2025-10-31T23:59:59Z"
       responses:
         "204":
           description: Logged successfully, no content
@@ -269,6 +428,20 @@ paths:
         **x402 canonical price:** `10000000` (USDC has 6 decimals, 10.00 → 10,000,000)
 
         > **Note for human users:** This feed is experimental and optimised for autonomous QA clients. Use at your own discretion.
+      x-codeSamples:
+        - lang: cURL
+          label: cURL
+          source: |
+            curl -X GET "https://sundial.exchange/api/premium-insight" \
+              -H "Accept: application/json" \
+              -H "X-PAYMENT: <base64 payment proof>"
+        - lang: JavaScript
+          label: Fetch API
+          source: |
+            const res = await fetch('https://sundial.exchange/api/premium-insight', {
+              headers: { 'X-PAYMENT': '<base64 payment proof>' }
+            });
+            const data = await res.json();
       responses:
         "200":
           description: Premium AI forecast payload
@@ -285,6 +458,15 @@ paths:
                     type: string
                     format: date-time
                     description: UTC timestamp when the forecast was generated
+              examples:
+                sample:
+                  summary: Example premium forecast
+                  value:
+                    forecast: |
+                      SOL likely to trade in the $150–$165 range over the next 24–36 hours.
+                      Momentum improving on rising DEX volumes; watch JUP and RAY pairs for
+                      outsized moves. Elevated MEV risk on SOL/USDC during US hours.
+                    generatedAt: "2025-10-31T23:59:59Z"
         "402":
           $ref: "#/components/responses/PaymentRequired"
         "500":
@@ -592,9 +774,14 @@ components:
       properties:
         error:
           type: string
+      example:
+        error: "Something went wrong"
 
     DexVolumeData:
       type: object
+      example:
+        date: "2025-10-26"
+        total24h: 118765432
     PoolAnalyticsMetrics:
       type: object
       properties:
@@ -612,6 +799,14 @@ components:
           type: [number, "null"]
         apy:
           type: [number, "null"]
+      example:
+        volume24hUsd: 1532456.12
+        volume7dUsd: 10234567.89
+        fees24hUsd: 8456.22
+        tvlUsd: 27450000.55
+        liquidityUsd: 27450000.55
+        apr: 12.3
+        apy: 13.1
 
     PoolReservesSnapshot:
       type: object
@@ -628,6 +823,13 @@ components:
           type: number
         quoteAmount:
           type: number
+      example:
+        baseSymbol: RAY
+        quoteSymbol: SOL
+        baseMint: "4k3Dyjzvzp8eMZWUXbBCQ1Z7Q7f2o5EwB3gG7x6Z7dS"
+        quoteMint: "So11111111111111111111111111111111111111112"
+        baseAmount: 1250000.5
+        quoteAmount: 53210.42
 
     PoolAnalyticsResponse:
       type: object
@@ -661,6 +863,27 @@ components:
           description: Raw upstream payload from Jupiter Ultra.
           type: object
           additionalProperties: true
+      example:
+        poolId: 9wFFqz4haWkYox2dXkbZ7P3V7g9E3G7Ayd6A8aXjRY3F
+        poolName: RAY/SOL
+        metrics:
+          volume24hUsd: 1532456.12
+          volume7dUsd: 10234567.89
+          fees24hUsd: 8456.22
+          tvlUsd: 27450000.55
+          liquidityUsd: 27450000.55
+          apr: 12.3
+          apy: 13.1
+        reserves:
+          baseSymbol: RAY
+          quoteSymbol: SOL
+          baseMint: "4k3Dyjzvzp8eMZWUXbBCQ1Z7Q7f2o5EwB3gG7x6Z7dS"
+          quoteMint: "So11111111111111111111111111111111111111112"
+          baseAmount: 1250000.5
+          quoteAmount: 53210.42
+        priceImpactBps: 27
+        updatedAtUnix: 1730419200
+        fetchedAt: "2025-10-31T23:59:59Z"
 
     ChainTvls:
       type: object
@@ -751,6 +974,12 @@ components:
           type: number
         breakdown24h:
           $ref: "#/components/schemas/Breakdown24h"
+      example:
+        slug: raydium
+        displayName: Raydium
+        url: https://raydium.io
+        tvl: 54200000
+        total24h: 128500000
 
     PriceHistoryPoint:
       type: object
@@ -760,6 +989,9 @@ components:
           type: number
         price:
           type: number
+      example:
+        timestamp: 1730401200
+        price: 1.12
 
     NormalizedTrendingToken:
       type: object
@@ -775,6 +1007,15 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PriceHistoryPoint"
+      example:
+        symbol: SOL
+        currentPrice: 158.32
+        change24h: 2.45
+        prices:
+          - timestamp: 1730314800
+            price: 154.10
+          - timestamp: 1730401200
+            price: 158.32
 
     StatsResponse:
       type: object
@@ -793,8 +1034,24 @@ components:
           type: [number, "null"]
         volume24hChangePct:
           type: [number, "null"]
+      example:
+        tps: 2150.5
+        solPriceUsd: 158.32
+        tvlUsd: 1250000000.0
+        volume24hUsd: 845000000.0
+        solChange24hPct: 2.45
+        tvlChange24hPct: 0.87
+        volume24hChangePct: -1.23
 
     SwapEventPayload:
       type: object
       description: Arbitrary JSON payload to log; shape is not validated server-side.
       additionalProperties: true
+      example:
+        txHash: "0xabc123..."
+        user: "A1b2C3d4E5f6G7h8i9J0kLmNoPqRsTuVwXyZ12345"
+        base: "SOL"
+        quote: "USDC"
+        amountBase: 12.5
+        amountQuote: 1975.33
+        timestamp: "2025-10-31T23:59:59Z"

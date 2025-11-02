@@ -5,6 +5,10 @@ import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, Bot, Clock, Code, Coins, DollarSign, ExternalLink, Shield, TrendingUp, Zap } from "lucide-react"
 import Link from "next/link"
 
+// static for performance and SEO
+export const dynamic = 'force-static'
+export const revalidate = false
+
 export default function Home() {
     return (
         <main className="min-h-screen bg-background">
@@ -22,10 +26,10 @@ export default function Home() {
                             POWERED BY JUPITER ULTRA • X402 NATIVE
                         </Badge>
 
-                        <h1 className="text-6xl md:text-8xl font-bold text-balance leading-[1.1] tracking-tight text-white drop-shadow-[0_0_30px_rgba(255,215,0,0.2)]">
-                            Pay Per Insight.
+                        <h1 className="text-4xl md:text-6xl font-bold text-balance leading-[1.1] tracking-tight text-white drop-shadow-[0_0_30px_rgba(255,215,0,0.2)]">
+                            x402 Solana DEX Data
                             <br />
-                            <span className="text-primary">Trade Like Tomorrow.</span>
+                            <span className="text-primary">for Crypto AI Agents</span>
                         </h1>
 
                         <p className="text-xl md:text-2xl text-muted-foreground text-balance max-w-3xl mx-auto leading-relaxed font-light">
@@ -35,7 +39,7 @@ export default function Home() {
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-5 pt-6">
                             <Button asChild size="lg" className="text-lg px-10 py-7 group font-semibold shadow-lg shadow-primary/30">
                                 <Link href="/swap">
-                                    Start Trading
+                                    Swap on Solana
                                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </Link>
                             </Button>
@@ -45,7 +49,7 @@ export default function Home() {
                                 variant="outline"
                                 className="text-lg px-10 py-7 bg-transparent border-2 border-border hover:border-primary font-semibold hover:bg-primary/10"
                             >
-                                <Link href="/chat">Try AI Assistant</Link>
+                                <Link href="/chat">AI Analytics Chat</Link>
                             </Button>
                         </div>
 
@@ -96,7 +100,7 @@ export default function Home() {
                                 </p>
                                 <div className="pt-2">
                                     <Badge variant="outline" className="bg-primary/20 text-primary border-primary font-semibold">
-                                        GPT-5 Powered
+                                        GPT-4o Powered
                                     </Badge>
                                 </div>
                             </CardContent>
@@ -109,7 +113,7 @@ export default function Home() {
                                 </div>
                                 <h3 className="text-2xl font-bold tracking-tight text-white">Real-Time Dashboards</h3>
                                 <p className="text-muted-foreground leading-relaxed">
-                                    Spot trends before they pump. Verifiable data via EigenLayer proofs, powered by Helius DAS.
+                                    Spot trends before they pump. Verifiable data powered by Helius DAS.
                                 </p>
                                 <div className="pt-2">
                                     <Badge variant="outline" className="bg-primary/20 text-primary border-primary font-semibold">
@@ -141,7 +145,7 @@ export default function Home() {
                                 className="border-primary hover:border-primary hover:bg-primary hover:text-black bg-black text-white font-bold shadow-lg shadow-primary/30"
                             >
                                 <a
-                                    href="https://registry.scalar.com/@starmorph/apis/sundial-exchange-api/latest"
+                                    href="/api-reference"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
@@ -336,7 +340,7 @@ export default function Home() {
                                 className="text-primary p-0 h-auto text-base font-bold hover:text-primary/80"
                             >
                                 <Link href="/swap">
-                                    Start Trading <ArrowRight className="ml-1 w-4 h-4" />
+                                    Swap Now <ArrowRight className="ml-1 w-4 h-4" />
                                 </Link>
                             </Button>
                         </div>
@@ -354,8 +358,8 @@ export default function Home() {
                                 variant="link"
                                 className="text-primary p-0 h-auto text-base font-bold hover:text-primary/80"
                             >
-                                <Link href="/portfolio">
-                                    View Portfolio <ArrowRight className="ml-1 w-4 h-4" />
+                                <Link href="/api-reference">
+                                    API Reference <ArrowRight className="ml-1 w-4 h-4" />
                                 </Link>
                             </Button>
                         </div>
@@ -366,7 +370,7 @@ export default function Home() {
                             </div>
                             <h3 className="text-3xl font-bold tracking-tight text-white">AI Agents</h3>
                             <p className="text-muted-foreground leading-relaxed text-lg">
-                                Verifiable feeds for autonomous trading. x402scan agents with EigenLayer proofs for trust.
+                                Verifiable feeds for autonomous trading. x402scan agents.
                             </p>
                             <Button
                                 asChild
@@ -425,22 +429,15 @@ export default function Home() {
                             <CardContent className="p-0 space-y-8">
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm text-muted-foreground font-medium">Total Value Locked</span>
-                                        <Badge variant="outline" className="bg-success/20 text-success border-success font-bold">
-                                            Live
-                                        </Badge>
+                                        <span className="text-sm text-muted-foreground font-medium">Total Value Locked in Jupiter</span>
                                     </div>
                                     <p className="text-5xl font-bold tracking-tight text-white">$892M</p>
-                                    <p className="text-sm text-success font-medium">+12.4% this week</p>
                                 </div>
 
                                 <div className="h-px bg-border" />
 
                                 <div className="grid grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <p className="text-sm text-muted-foreground font-medium">24h Volume</p>
-                                        <p className="text-3xl font-bold tracking-tight text-white">$22.4B</p>
-                                    </div>
+
                                     <div className="space-y-2">
                                         <p className="text-sm text-muted-foreground font-medium">Total Swaps</p>
                                         <p className="text-3xl font-bold tracking-tight text-white">1.2M+</p>
@@ -452,7 +449,7 @@ export default function Home() {
                                 <div className="space-y-3">
                                     <p className="text-sm text-muted-foreground font-medium">Query Cost</p>
                                     <div className="flex items-baseline gap-3">
-                                        <p className="text-4xl font-bold text-primary tracking-tight">$0.10</p>
+                                        <p className="text-4xl font-bold text-primary tracking-tight"> as low as $0.0001</p>
                                         <p className="text-sm text-muted-foreground">per insight</p>
                                     </div>
                                 </div>
@@ -482,7 +479,7 @@ export default function Home() {
                                     className="text-lg px-10 py-7 group font-bold shadow-2xl shadow-primary/50 bg-primary text-black hover:bg-primary/90"
                                 >
                                     <Link href="/swap">
-                                        Connect Wallet to Swap
+                                        Swap on Solana
                                         <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </Link>
                                 </Button>
@@ -492,7 +489,7 @@ export default function Home() {
                                     variant="outline"
                                     className="text-lg px-10 py-7 bg-black border-2 border-border hover:border-primary font-bold hover:bg-primary hover:text-black text-white shadow-lg shadow-primary/20"
                                 >
-                                    <Link href="/chat">Ask AI Assistant</Link>
+                                    <Link href="/chat">AI Chat</Link>
                                 </Button>
                             </div>
                         </CardContent>

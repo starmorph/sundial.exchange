@@ -1,18 +1,22 @@
-import nextPlugin from "@next/eslint-plugin-next"
+import globals from "globals";
+import pluginJs from "@eslint/js";
+import tseslint from "typescript-eslint";
 
-const coreWebVitalsConfig = nextPlugin.configs["core-web-vitals"]
-
+/** @type {import('eslint').Linter.Config[]} */
 export default [
-	{
-		ignores: ["coverage/**", "node_modules/**", ".next/**"],
-	},
-	{
-		plugins: {
-			"@next/next": nextPlugin,
-		},
-		rules: {
-			...coreWebVitalsConfig.rules,
-		},
-	},
-]
-
+  { files: ["**/*.{js,mjs,cjs,ts}"] },
+  { languageOptions: { globals: globals.browser } },
+  pluginJs.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    rules: {
+      "no-constant-condition": "off",
+      "no-useless-escape": "off",
+      // Handled by typescript compiler
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-empty-object-type": "off",
+      "@typescript-eslint/no-namespace": "off",
+    },
+  },
+];

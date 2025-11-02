@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Sundial Exchange API
-  version: 1.1.5
+  version: 1.2.0
   description: |
     Real-time Solana DEX analytics API powered by x402 payments.
 
@@ -219,6 +219,7 @@ paths:
       tags: [dex]
       operationId: getDexProtocolBySlug
       summary: Get DEX protocol details
+      description: Returns detailed information about a specific DEX protocol on Solana, including TVL, volume metrics, and protocol metadata.
       parameters:
         - in: path
           name: slug
@@ -312,6 +313,7 @@ paths:
       tags: [trending]
       operationId: getTrendingTokens
       summary: Get trending token pricing data
+      description: Returns time-series pricing data for trending Solana tokens over a specified lookback window (default 24 hours), including current prices and 24h price changes.
       parameters:
         - in: query
           name: hours
@@ -653,10 +655,8 @@ components:
               description: Base recipient (Ethereum address)
             - pattern: "^[1-9A-HJ-NP-Za-km-z]{32,44}$"
               description: Solana recipient (Base58 address)
-          examples:
-            base: "0xde7ae42f066940c50efeed40fd71dde630148c0a"
-            solana: "Aia9ukbSndCSrTnv8geoSjeJcY6Q5GvdsMSo1busrr5K"
-          description: Recipient wallet address (format depends on network)
+          example: "0xde7ae42f066940c50efeed40fd71dde630148c0a"
+          description: Recipient wallet address (format depends on network, e.g., Base or Solana)
         maxTimeoutSeconds:
           type: integer
           example: 300
@@ -668,10 +668,8 @@ components:
               description: Base USDC contract (ERC-20)
             - pattern: "^[1-9A-HJ-NP-Za-km-z]{32,44}$"
               description: Solana USDC contract (SPL Token)
-          examples:
-            base: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-            solana: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-          description: USDC token contract address (format depends on network)
+          example: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+          description: USDC token contract address (format depends on network, e.g., Base or Solana)
         outputSchema:
           type: object
           description: |

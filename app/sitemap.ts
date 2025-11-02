@@ -1,4 +1,4 @@
-import { getSolanaDexProtocols } from "@/lib/defillama-volumes"
+import { getSolanaDexProtocols } from "@/lib/data/defillama-volumes"
 import type { MetadataRoute } from "next"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

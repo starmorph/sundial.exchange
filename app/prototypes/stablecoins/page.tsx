@@ -12,7 +12,7 @@ import {
   getSolanaStablecoins,
   getSolanaStablecoinHistory,
   type Stablecoin,
-} from "@/lib/defillama-stablecoins"
+} from "@/lib/data/defillama-stablecoins"
 
 export default function StablecoinsPage() {
   const [stablecoins, setStablecoins] = useState<Stablecoin[]>([])

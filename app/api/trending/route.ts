@@ -1,4 +1,4 @@
-import { fetchTrendingTokensData } from "@/lib/defillama"
+import { fetchTrendingTokensData } from "@/lib/data/defillama"
 import { NextResponse } from "next/server"
 
 export async function GET(request: Request) {

@@ -4,7 +4,7 @@ import { Navbar } from '@/components/navbar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { type DexProtocolSummary, type DexVolumeData } from "@/lib/defillama-volumes"
+import { type DexProtocolSummary, type DexVolumeData } from "@/lib/data/defillama-volumes"
 import { motion } from "framer-motion"
 import { BarChart3, DollarSign, TrendingDown, TrendingUp } from "lucide-react"
 import { useRouter } from "next/navigation"

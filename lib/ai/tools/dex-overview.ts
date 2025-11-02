@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { getDexProtocolSummary } from "@/lib/defillama-volumes"
+import { getDexProtocolSummary } from "@/lib/data/defillama-volumes"
 
 const MAX_DEX_QUERIES = 3
 

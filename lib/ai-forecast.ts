@@ -1,4 +1,4 @@
-import { fetchTrendingTokensData } from "@/lib/defillama"
+import { fetchTrendingTokensData } from "@/lib/data/defillama"
 import { createOpenAI } from "@ai-sdk/openai"
 import { generateText } from "ai"
 

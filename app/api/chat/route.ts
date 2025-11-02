@@ -2,11 +2,11 @@ import { createOpenAI } from "@ai-sdk/openai"
 import { withTracing } from "@posthog/ai"
 import { convertToModelMessages, streamText, type UIMessage } from "ai"
 
-import { logAssistantResponse, logChatError, logUserMessage } from "@/lib/ai-message-logger"
+import { logAssistantResponse, logChatError, logUserMessage } from "@/logging/ai-message-logger"
 import { AI_CONFIG, SYSTEM_PROMPT } from "@/lib/ai/config"
 import { tools } from "@/lib/ai/tools"
-import { extractLatestUserMessage } from "@/lib/ai/utils"
-import createPosthogClient from "@/lib/posthog"
+import createPosthogClient from "@/logging/posthog"
+import { extractLatestUserMessage } from "@/utils/ai-util-functions"
 
 export async function POST(req: Request) {
     let walletAddress: string | null = null

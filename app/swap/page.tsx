@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/navbar"
-import { StatsBar } from "@/components/stats-bar"
-import SwapInterface from "@/components/swap-interface"
-import { TrendingTokens } from "@/components/trending-tokens"
+import { StatsBar } from "@/components/stats/stats-bar"
+import SwapInterface from "@/components/swap/swap-interface"
+import { TrendingTokens } from "@/components/stats/trending-tokens"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {

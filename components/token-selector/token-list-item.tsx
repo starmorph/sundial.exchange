@@ -1,7 +1,7 @@
 "use client"
 
+import type { Token } from "@/components/swap/swap-interface"
 import { Button } from "@/components/ui/button"
-import type { Token } from "@/components/swap-interface"
 import { ExternalLink } from "lucide-react"
 import Image from "next/image"
 

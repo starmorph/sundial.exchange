@@ -7,13 +7,13 @@ import {
   ToolInput,
   ToolOutput,
 } from "@/components/ai-elements/tool"
-import { SundialPaymentModal } from "@/components/sundial-chat/payment-modal"
+import { SundialPaymentModal } from "@/components/chat/payment-modal"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { toolMetadata } from "@/lib/ai/tools"
-import { formatToolName } from "@/lib/ai/utils"
-import { cn } from "@/lib/utils"
+import { formatToolName } from "@/utils/ai-util-functions"
+import { cn } from "@/utils/utils"
 import { useChat, type UIMessage } from "@ai-sdk/react"
 import { useWallet } from '@solana/wallet-adapter-react'
 import type { ToolUIPart, UITools } from "ai"

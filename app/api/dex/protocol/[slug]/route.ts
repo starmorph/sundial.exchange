@@ -1,4 +1,4 @@
-import { getDexProtocolDetails } from "@/lib/defillama-volumes"
+import { getDexProtocolDetails } from "@/lib/data/defillama-volumes"
 import { NextResponse } from "next/server"
 
 export async function GET(

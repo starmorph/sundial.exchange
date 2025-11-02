@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import type { Token } from "@/components/swap/swap-interface"
+import { TokenSelectorModal } from "@/components/token-selector/token-selector-modal"
 import { Button } from "@/components/ui/button"
-import { TokenSelectorModal } from "@/components/token-selector-modal"
 import { ChevronDown } from "lucide-react"
-import type { Token } from "@/components/swap-interface"
 import Image from "next/image"
+import { useState } from "react"
 
 interface TokenSelectorProps {
   selectedToken: Token

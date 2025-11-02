@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { getPoolAnalytics } from "@/lib/jupiter-ultra"
+import { getPoolAnalytics } from "@/lib/data/jupiter-ultra"
 
 export async function GET(request: Request) {
     const url = new URL(request.url)

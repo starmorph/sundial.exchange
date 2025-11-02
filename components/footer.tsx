@@ -33,10 +33,10 @@ export function Footer() {
                   <Link href="/dex-analytics" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                     Analytics
                   </Link>
-                  <Link href="/#" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                    AI Assistant <Badge variant="outline">Coming Soon</Badge>
+                  <Link href="/chat" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+                    AI Analytics Chat
                   </Link>
-                  <Link href="/stablecoins" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+                  <Link href="/prototypes/stablecoins" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                     Stablecoins <Badge variant="outline">Coming Soon</Badge>
                   </Link>
 

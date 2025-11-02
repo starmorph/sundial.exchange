@@ -1,6 +1,6 @@
 import { Footer } from '@/components/footer'
-import { SolanaWalletProvider } from '@/components/wallet-provider'
-import { PostHogProvider } from '@/components/PostHogProvider'
+import { SolanaWalletProvider } from '@/components/providers/wallet-provider'
+import { PostHogProvider } from '@/components/providers/PostHogProvider'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { Analytics } from '@vercel/analytics/next'
 import { GeistMono } from 'geist/font/mono'

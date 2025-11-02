@@ -1,6 +1,6 @@
 "use client"
+import { SundialChatInterface } from "@/components/chat/chat-interface"
 import { Navbar } from "@/components/navbar"
-import { SundialChatInterface } from "@/components/sundial-chat/chat-interface"
 
 export default function SundialPage() {
     return (

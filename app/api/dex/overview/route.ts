@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
-import { getDexProtocolSummary, getSolanaDexProtocols, getSolanaDexVolumes } from "@/lib/defillama-volumes"
+import { getDexProtocolSummary, getSolanaDexProtocols, getSolanaDexVolumes } from "@/lib/data/defillama-volumes"
 
 const MAX_DEX_QUERIES = 3
 const PRICE_USDC = 0.01

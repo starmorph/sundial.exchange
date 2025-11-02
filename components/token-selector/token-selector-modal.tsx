@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import type { Token } from "@/components/swap/swap-interface"
+import { TokenListItem } from "@/components/token-selector/token-list-item"
+import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { TokenListItem } from "@/components/token-list-item"
-import type { Token } from "@/components/swap-interface"
 import { Search } from "lucide-react"
+import { useMemo, useState } from "react"
 
 interface TokenSelectorModalProps {
   open: boolean

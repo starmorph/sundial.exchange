@@ -1,4 +1,4 @@
-import { getSolanaDexProtocols } from "@/lib/defillama-volumes"
+import { getSolanaDexProtocols } from "@/lib/data/defillama-volumes"
 import type { Metadata } from "next"
 import { JsonLd } from "../../jsonld"
 

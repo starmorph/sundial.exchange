@@ -2,9 +2,9 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import type { JupiterOrderResponse } from "@/lib/jupiter-ultra"
-import { SOLANA_TOKENS } from "@/lib/solana-tokens"
-import { cn } from "@/lib/utils"
+import type { JupiterOrderResponse } from "@/lib/data/jupiter-ultra"
+import { SOLANA_TOKENS } from "@/types/solana-tokens"
+import { cn } from "@/utils/utils"
 import { ArrowRight } from "lucide-react"
 
 interface SwapRoutingProps {

@@ -1,7 +1,7 @@
 "use client"
 
-import type { Token } from "@/components/swap-interface"
-import { TokenSelector } from "@/components/token-selector"
+import type { Token } from "@/components/swap/swap-interface"
+import { TokenSelector } from "@/components/token-selector/token-selector"
 import { Button } from "@/components/ui/button"
 
 interface SwapCardProps {

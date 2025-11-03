@@ -1,0 +1,47 @@
+overlay: 1.0.0
+info:
+  title: CodeSamples overlay for typescript target
+  version: 0.0.0
+actions:
+  - target: $["paths"]["/api/dex/overview"]["get"]
+    update:
+      "x-codeSamples":
+        - "lang": "typescript"
+          "label": "getDexOverview"
+          "source": "import { SundialExchangeApi } from \"@starmorph/sundial-exchange-api-typescript\";\n\nconst sundialExchangeApi = new SundialExchangeApi();\n\nasync function run() {\n  const result = await sundialExchangeApi.dex.getDexOverview();\n\n  console.log(result);\n}\n\nrun();"
+  - target: $["paths"]["/api/dex/protocol/{slug}"]["get"]
+    update:
+      "x-codeSamples":
+        - "lang": "typescript"
+          "label": "getDexProtocolBySlug"
+          "source": "import { SundialExchangeApi } from \"@starmorph/sundial-exchange-api-typescript\";\n\nconst sundialExchangeApi = new SundialExchangeApi();\n\nasync function run() {\n  const result = await sundialExchangeApi.dex.getDexProtocolBySlug({\n    slug: \"raydium\",\n  });\n\n  console.log(result);\n}\n\nrun();"
+  - target: $["paths"]["/api/pools/analytics"]["get"]
+    update:
+      "x-codeSamples":
+        - "lang": "typescript"
+          "label": "getPoolAnalytics"
+          "source": "import { SundialExchangeApi } from \"@starmorph/sundial-exchange-api-typescript\";\n\nconst sundialExchangeApi = new SundialExchangeApi();\n\nasync function run() {\n  const result = await sundialExchangeApi.dex.getPoolAnalytics({\n    poolId: \"9wFFqz4haWkYox2dXkbZ7P3V7g9E3G7Ayd6A8aXjRY3F\",\n  });\n\n  console.log(result);\n}\n\nrun();"
+  - target: $["paths"]["/api/premium-insight"]["get"]
+    update:
+      "x-codeSamples":
+        - "lang": "typescript"
+          "label": "getPremiumInsight"
+          "source": "import { SundialExchangeApi } from \"@starmorph/sundial-exchange-api-typescript\";\n\nconst sundialExchangeApi = new SundialExchangeApi();\n\nasync function run() {\n  const result = await sundialExchangeApi.premium.getPremiumInsight();\n\n  console.log(result);\n}\n\nrun();"
+  - target: $["paths"]["/api/stats"]["get"]
+    update:
+      "x-codeSamples":
+        - "lang": "typescript"
+          "label": "getStats"
+          "source": "import { SundialExchangeApi } from \"@starmorph/sundial-exchange-api-typescript\";\n\nconst sundialExchangeApi = new SundialExchangeApi();\n\nasync function run() {\n  const result = await sundialExchangeApi.stats.getStats();\n\n  console.log(result);\n}\n\nrun();"
+  - target: $["paths"]["/api/swap-log"]["post"]
+    update:
+      "x-codeSamples":
+        - "lang": "typescript"
+          "label": "postSwapLog"
+          "source": "import { SundialExchangeApi } from \"@starmorph/sundial-exchange-api-typescript\";\n\nconst sundialExchangeApi = new SundialExchangeApi();\n\nasync function run() {\n  const result = await sundialExchangeApi.logging.postSwapLog({\n    \"txHash\": \"0xabc123...\",\n    \"user\": \"A1b2C3d4E5f6G7h8i9J0kLmNoPqRsTuVwXyZ12345\",\n    \"base\": \"SOL\",\n    \"quote\": \"USDC\",\n    \"amountBase\": 12.5,\n    \"amountQuote\": 1975.33,\n    \"timestamp\": \"2025-10-31T23:59:59Z\",\n  });\n\n  console.log(result);\n}\n\nrun();"
+  - target: $["paths"]["/api/trending"]["get"]
+    update:
+      "x-codeSamples":
+        - "lang": "typescript"
+          "label": "getTrendingTokens"
+          "source": "import { SundialExchangeApi } from \"@starmorph/sundial-exchange-api-typescript\";\n\nconst sundialExchangeApi = new SundialExchangeApi();\n\nasync function run() {\n  const result = await sundialExchangeApi.trending.getTrendingTokens({});\n\n  console.log(result);\n}\n\nrun();"

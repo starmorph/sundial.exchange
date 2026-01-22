@@ -7,6 +7,7 @@ export default function SundialPage() {
 
         <div className="sundial-theme flex h-screen flex-col bg-background">
             <Navbar />
+            <h1 className="sr-only">AI-Powered Solana DEX Analytics Chat</h1>
             <main className="flex-1 overflow-hidden">
                 <SundialChatInterface />
             </main>

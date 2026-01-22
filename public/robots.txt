@@ -2,9 +2,9 @@
 User-agent: *
 Allow: /
 
-# Disallow admin or sensitive paths if any
-# Disallow: /api/
+# Disallow API and internal paths
+Disallow: /api/
+Disallow: /prototypes/
 
 # Sitemap location
 Sitemap: https://sundial.exchange/sitemap.xml
-

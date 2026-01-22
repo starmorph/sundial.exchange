@@ -18,16 +18,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.9,
         },
         {
-            url: `${baseUrl}/tokens`,
+            url: `${baseUrl}/chat`,
             lastModified: new Date(),
-            changeFrequency: "hourly",
-            priority: 0.8,
+            changeFrequency: "daily",
+            priority: 0.85,
         },
         {
             url: `${baseUrl}/dex-analytics`,
             lastModified: new Date(),
             changeFrequency: "hourly",
             priority: 0.85,
+        },
+        {
+            url: `${baseUrl}/terms-of-service`,
+            lastModified: new Date(),
+            changeFrequency: "monthly",
+            priority: 0.3,
+        },
+        {
+            url: `${baseUrl}/privacy-policy`,
+            lastModified: new Date(),
+            changeFrequency: "monthly",
+            priority: 0.3,
         },
     ]
 

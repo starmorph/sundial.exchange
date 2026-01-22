@@ -1,9 +1,31 @@
+import { FaqSection } from "@/components/faq-section"
 import { Navbar } from "@/components/navbar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, Bot, Clock, Code, Coins, DollarSign, ExternalLink, Shield, TrendingUp, Zap } from "lucide-react"
 import Link from "next/link"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+    title: 'Sundial Exchange | x402 Micropaid Crypto Analytics API',
+    description: 'Pay-per-query Solana DEX analytics via x402 micropayments. AI agent-ready API for real-time volume, TVL, and trading data. No subscriptions, no KYC.',
+    keywords: [
+        'x402 crypto api',
+        'x402 micropayments solana',
+        'micropaid crypto analytics',
+        'ai agent crypto data api',
+        'pay per query crypto api',
+        'solana dex volume api',
+        'sundial exchange',
+    ],
+    alternates: { canonical: '/' },
+    openGraph: {
+        title: 'Sundial Exchange | x402 Micropaid Crypto Analytics',
+        description: 'Pay-per-query Solana DEX analytics. AI agent-ready, no subscriptions.',
+        url: 'https://sundial.exchange',
+    },
+}
 
 // static for performance and SEO
 export const dynamic = 'force-static'
@@ -458,6 +480,8 @@ export default function Home() {
                     </div>
                 </div>
             </section>
+
+            <FaqSection />
 
             <section className="py-24">
                 <div className="container mx-auto px-4 max-w-7xl">

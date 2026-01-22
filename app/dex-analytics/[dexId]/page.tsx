@@ -1,5 +1,6 @@
 "use client"
 
+import { Breadcrumbs } from '@/components/breadcrumbs'
 import { Navbar } from '@/components/navbar'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -93,10 +94,20 @@ export default function IndividualDexPage() {
     const change24h = protocolData.change_1d || 0
     const change7d = protocolData.change_7d || 0
 
+    const displayName = protocolData.displayName || protocolData.name
+
     return (
         <div className="min-h-screen bg-background overflow-x-hidden w-full max-w-[100vw]">
             <Navbar />
             <div className="container mx-auto px-6 py-8">
+                {/* Breadcrumbs */}
+                <Breadcrumbs
+                    items={[
+                        { name: "DEX Analytics", url: "/dex-analytics" },
+                        { name: displayName, url: `/dex-analytics/${dexId}` },
+                    ]}
+                />
+
                 {/* Back Button */}
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                     <Button

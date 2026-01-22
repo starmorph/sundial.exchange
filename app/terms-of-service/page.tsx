@@ -1,9 +1,16 @@
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Metadata } from "next"
 
-export const metadata = {
-  title: "Terms of Use | Sundial Exchange",
-  description: "Terms of use for Sundial Exchange",
+export const metadata: Metadata = {
+  title: "Terms of Use",
+  description: "Terms of use for Sundial Exchange decentralized exchange platform. User responsibilities, risks, and disclaimers for trading on Solana.",
+  alternates: { canonical: '/terms-of-service' },
+  openGraph: {
+    title: 'Terms of Use | Sundial Exchange',
+    description: 'Terms of use for Sundial Exchange decentralized exchange platform.',
+    url: 'https://sundial.exchange/terms-of-service',
+  },
 }
 
 export default function TermsPage() {
@@ -13,7 +20,7 @@ export default function TermsPage() {
       <main className="container mx-auto px-4 py-12 max-w-4xl">
         <Card className="border-border/50">
           <CardHeader>
-            <CardTitle className="text-3xl font-mono">Terms of Use</CardTitle>
+            <h1 className="text-3xl font-mono font-bold">Terms of Use</h1>
             <CardDescription>Last updated: {new Date().toLocaleDateString()}</CardDescription>
           </CardHeader>
           <CardContent className="prose prose-invert max-w-none space-y-6">

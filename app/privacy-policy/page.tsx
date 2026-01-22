@@ -1,9 +1,16 @@
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Metadata } from "next"
 
-export const metadata = {
-  title: "Privacy Policy | Sundial Exchange",
-  description: "Privacy policy for Sundial Exchange",
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "Privacy policy for Sundial Exchange. Learn how we handle your data on our non-custodial Solana DEX platform.",
+  alternates: { canonical: '/privacy-policy' },
+  openGraph: {
+    title: 'Privacy Policy | Sundial Exchange',
+    description: 'Privacy policy for Sundial Exchange decentralized exchange platform.',
+    url: 'https://sundial.exchange/privacy-policy',
+  },
 }
 
 export default function PrivacyPage() {
@@ -13,7 +20,7 @@ export default function PrivacyPage() {
       <main className="container mx-auto px-4 py-12 max-w-4xl">
         <Card className="border-border/50">
           <CardHeader>
-            <CardTitle className="text-3xl font-mono">Privacy Policy</CardTitle>
+            <h1 className="text-3xl font-mono font-bold">Privacy Policy</h1>
             <CardDescription>Last updated: {new Date().toLocaleDateString()}</CardDescription>
           </CardHeader>
           <CardContent className="prose prose-invert max-w-none space-y-6">

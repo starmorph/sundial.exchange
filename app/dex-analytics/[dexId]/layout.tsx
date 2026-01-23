@@ -14,8 +14,16 @@ export async function generateStaticParams(): Promise<Params[]> {
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
     const { dexId } = await params
     const baseUrl = "https://sundial.exchange"
-    const title = `${dexId} Analytics on Solana | Sundial`
-    const description = `View ${dexId} DEX analytics on Solana: volume history, market share and chain breakdown.`
+
+    // Format display name from slug (e.g., "raydium-amm" -> "Raydium AMM")
+    const displayName = dexId
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
+
+    const title = `${displayName} Analytics | Solana DEX Volume & TVL Data`
+    // Description must be 120-160 characters for Ahrefs
+    const description = `Track ${displayName} on Solana with real-time 24h volume, 7d trends, TVL metrics, and historical charts. Compare market share across all Solana DEX protocols.`
     const url = `${baseUrl}/dex-analytics/${dexId}`
 
     return {
@@ -30,9 +38,10 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
             type: "article",
             images: [
                 {
-                    url: "/opengraph-image.png",
+                    url: `/dex-analytics/${dexId}/opengraph-image`,
                     width: 1200,
                     height: 630,
+                    alt: `${displayName} Analytics on Sundial Exchange`,
                 },
             ],
         },
@@ -40,7 +49,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
             card: "summary_large_image",
             title,
             description,
-            images: ["/opengraph-image.png"],
+            images: [`/dex-analytics/${dexId}/opengraph-image`],
         },
         robots: {
             index: true,
@@ -50,7 +59,9 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
         keywords: [
             `${dexId} analytics`,
             `${dexId} volume solana`,
-            `${dexId} market share solana`,
+            `${dexId} tvl`,
+            `${dexId} 24h volume`,
+            `${displayName.toLowerCase()} dex analytics`,
             "solana dex protocol analytics",
             "solana defi dex metrics",
         ],

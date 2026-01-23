@@ -676,8 +676,20 @@ async function settlePayment(
 }
 
 export async function middleware(request: NextRequest) {
-    // Log all incoming requests for debugging
     const url = new URL(request.url)
+
+    // SEO: Permanent redirect www to non-www (301)
+    if (url.hostname === "www.sundial.exchange") {
+        url.hostname = "sundial.exchange"
+        return NextResponse.redirect(url, 301)
+    }
+
+    // Only apply x402 logic to /api/* routes (except /api/chat)
+    if (!url.pathname.startsWith("/api/") || url.pathname.startsWith("/api/chat")) {
+        return NextResponse.next()
+    }
+
+    // Log all incoming requests for debugging
     const origin = request.headers.get("origin") || "none"
     const referer = request.headers.get("referer") || "none"
     const userAgent = request.headers.get("user-agent") || "none"
@@ -781,7 +793,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        "/api/((?!chat).*)", // Match all /api/* except /api/chat
+        // Match all paths for www redirect, and /api/* except /api/chat for x402
+        "/((?!_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg|.*\\.ico).*)",
     ],
 }
 
